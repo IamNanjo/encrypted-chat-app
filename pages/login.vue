@@ -44,11 +44,23 @@ async function handleSubmit() {
 			<h1>Log In</h1>
 			<div class="form-group">
 				<label for="username">Username</label>
-				<input required id="username" type="text" v-model="username" />
+				<input
+					required
+					id="username"
+					type="text"
+					autocomplete="username"
+					v-model="username"
+				/>
 			</div>
 			<div class="form-group">
 				<label for="password">Password</label>
-				<input required id="password" type="text" v-model="password" />
+				<input
+					required
+					id="password"
+					type="password"
+					autocomplete="current-password"
+					v-model="password"
+				/>
 			</div>
 			<button type="submit">Log In</button>
 			<Alert v-if="error">{{ error }}</Alert>

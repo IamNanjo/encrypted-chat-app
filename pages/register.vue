@@ -55,14 +55,21 @@ async function handleSubmit() {
 			</div>
 			<div class="form-group">
 				<label for="password">Password</label>
-				<input required id="password" type="text" v-model="password" />
+				<input
+					required
+					id="password"
+					type="password"
+					autocomplete="new-password"
+					v-model="password"
+				/>
 			</div>
 			<div class="form-group">
 				<label for="passwordConfirm">Confirm Password</label>
 				<input
 					required
 					id="passwordConfirm"
-					type="text"
+					type="password"
+					autocomplete="new-password"
 					v-model="passwordConfirm"
 				/>
 			</div>
