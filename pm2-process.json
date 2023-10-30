@@ -3,6 +3,8 @@
     {
       "name": "chat",
       "script": ".output/server/index.mjs",
+      "exec_mode": "cluster",
+      "instances": "max",
       "watch": false,
       "env": {
         "NODE_ENV": "production",
