@@ -1,14 +1,8 @@
 <script setup lang="ts">
-const auth = useAuth();
-const router = useRouter();
 const username = ref("");
 const password = ref("");
 const passwordConfirm = ref("");
 const error = ref("");
-
-onMounted(() => {
-	if (auth.value.authenticated) router.back();
-});
 
 async function handleSubmit() {
 	error.value = "";
