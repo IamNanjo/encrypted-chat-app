@@ -1,11 +1,10 @@
 <script setup lang="ts">
 const isOpen = useChatMenu();
-isOpen.value = false;
 </script>
 
 <template>
 	<div
-		:class="`mobile-menu ${isOpen ? 'open' : ''}`"
+		:class="`mobile-menu__toggle ${isOpen ? 'open' : ''}`"
 		@click="() => (isOpen = !isOpen)"
 	>
 		<span></span>
@@ -16,7 +15,7 @@ isOpen.value = false;
 </template>
 
 <style lang="scss">
-.mobile-menu {
+.mobile-menu__toggle {
 	width: 30px;
 	height: 22px;
 	position: relative;
