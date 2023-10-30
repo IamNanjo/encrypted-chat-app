@@ -9,7 +9,6 @@
 <style lang="scss">
 .profile-menu {
 	position: relative;
-	width: max-content;
 	z-index: 10;
 
 	&:focus > &__options,
@@ -26,6 +25,7 @@
 		flex-direction: column;
 		position: absolute;
 		background-color: var(--bg-raise-1);
+		max-width: min(75vw, 14em);
 		bottom: -0.5em;
 		left: 1em;
 		transform: translate(-100%, 100%);
@@ -48,6 +48,8 @@
 
 		* {
 			text-wrap: nowrap;
+			text-overflow: ellipsis;
+			overflow: hidden;
 		}
 	}
 
