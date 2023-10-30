@@ -25,7 +25,7 @@
 	text-decoration: none;
 	transition-property: background-color, color;
 	transition-duration: 0.2s;
-	transition-timing-function: ease;
+	transition-timing-function: linear;
 }
 
 :root {

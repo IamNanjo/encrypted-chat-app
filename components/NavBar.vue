@@ -17,6 +17,15 @@ const auth = useAuth();
 				<Icon name="material-symbols:account-circle" size="2em" />
 			</div>
 			<div class="profile-menu__options">
+				<div v-if="auth.authenticated">Logged in as {{ auth.username }}</div>
+				<div>
+					<Icon name="material-symbols:brightness-4-rounded" size="1.5em" />
+					<select v-model="theme.preference">
+						<option value="system">System</option>
+						<option value="dark">Dark</option>
+						<option value="light">Light</option>
+					</select>
+				</div>
 				<NuxtLink to="/login" v-if="!auth.authenticated">
 					<Icon name="material-symbols:login-rounded" size="1.5em" />
 					<div>Log In</div>
@@ -29,14 +38,6 @@ const auth = useAuth();
 					<Icon name="material-symbols:manage-accounts-rounded" size="1.5em" />
 					<div>Profile</div>
 				</NuxtLink>
-				<div>
-					<Icon name="material-symbols:brightness-4-rounded" size="1.5em" />
-					<select v-model="theme.preference">
-						<option value="system">System</option>
-						<option value="dark">Dark</option>
-						<option value="light">Light</option>
-					</select>
-				</div>
 				<NuxtLink to="/logout" v-if="auth.authenticated">
 					<Icon name="material-symbols:logout-rounded" size="1.5em" />
 					<div>Log out</div>
