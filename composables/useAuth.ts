@@ -4,4 +4,4 @@ interface User {
 }
 
 export default () =>
-	useState<User>("chatMenu", () => ({ authenticated: true, username: "Nanjoooooooooooooooo" }));
+	useState<User>("auth", () => ({ authenticated: false, username: "" }));
