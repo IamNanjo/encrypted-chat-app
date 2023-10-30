@@ -1,0 +1,13 @@
+{
+  "apps": [
+    {
+      "name": "chat",
+      "script": ".output/server/index.mjs",
+      "watch": true,
+      "env": {
+        "NODE_ENV": "production",
+        "PORT": 10443
+      }
+    }
+  ]
+}
