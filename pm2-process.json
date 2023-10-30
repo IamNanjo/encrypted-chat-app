@@ -3,7 +3,7 @@
     {
       "name": "chat",
       "script": ".output/server/index.mjs",
-      "watch": true,
+      "watch": false,
       "env": {
         "NODE_ENV": "production",
         "PORT": 10443
