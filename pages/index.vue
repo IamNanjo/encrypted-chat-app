@@ -17,7 +17,7 @@ onMounted(() => {
 
 <template>
 	<main>
-		<SideBar v-if="chatMenuOpen" />
+		<ChatMenu v-if="chatMenuOpen" />
 	</main>
 </template>
 
