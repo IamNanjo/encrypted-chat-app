@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = "file:./chat-app.db"
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -13,6 +13,7 @@ model User {
   password         String
   created          DateTime  @default(now())
   devices          Device[]
+  chats            Chat[]    @relation("ChatMembers")
   sentMessages     Message[] @relation(name: "messagesFrom")
   receivedMessages Message[] @relation(name: "messagesTo")
 }
@@ -26,10 +27,17 @@ model Device {
   user     User     @relation(fields: [id], references: [id])
 }
 
+model Chat {
+  id      Int       @id @default(autoincrement())
+  members User[]    @relation("ChatMembers")
+  Message Message[]
+}
+
 model Message {
   id      Int      @id @default(autoincrement())
   content String
   created DateTime @default(now())
+  chat    Chat     @relation(fields: [id], references: [id])
   from    User     @relation(fields: [id], references: [id], name: "messagesFrom")
   to      User     @relation(fields: [id], references: [id], name: "messagesTo")
 }
