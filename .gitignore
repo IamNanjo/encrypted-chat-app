@@ -25,4 +25,5 @@ logs
 
 prisma/migrations
 prisma/chat-app.db
+prisma/chat-app-production.db
 prisma/chat-app.db-journal
