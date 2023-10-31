@@ -8,7 +8,8 @@
       "watch": false,
       "env": {
         "NODE_ENV": "production",
-        "PORT": 10443
+        "PORT": 10443,
+        "DATABASE_URL": "/var/www/chat-app/prisma/chat-app-production.db"
       }
     }
   ]
