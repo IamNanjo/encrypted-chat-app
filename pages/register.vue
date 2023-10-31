@@ -79,14 +79,14 @@ async function handleSubmit() {
 	</main>
 </template>
 
-<style scoped lang="scss">
+<style lang="scss">
 .auth-form {
 	display: flex;
 	flex-direction: column;
 	flex-grow: 1;
 	gap: 2em;
 	background-color: rgba(255, 255, 255, 0.03);
-	max-width: 450px;
+	max-width: min(450px, 95%);
 	padding: 1em;
 	border-radius: 12px;
 	font-size: 1.125em;
