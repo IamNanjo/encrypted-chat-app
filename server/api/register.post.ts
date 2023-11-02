@@ -1,5 +1,5 @@
-import bcrypt from "bcrypt";
 import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcrypt";
 
 export default defineEventHandler(async (e) => {
 	const body = (await readBody(e)) as { username?: string; password?: string };
