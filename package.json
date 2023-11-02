@@ -6,7 +6,8 @@
 		"build": "nuxt build",
 		"dev": "nuxt dev",
 		"dbinit": "prisma migrate dev --name init",
-		"dbgenerate": "prisma generate"
+		"dbgenerate": "prisma generate",
+		"start": "pm2 flush && pm2 restart pm2-process.json"
 	},
 	"devDependencies": {
 		"@nuxt/devtools": "latest",
