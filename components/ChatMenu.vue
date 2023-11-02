@@ -1,5 +1,22 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+const isOpen = useChatMenu();
+</script>
 
-<template><aside></aside></template>
+<template>
+	<aside :class="isOpen ? 'chat-menu open' : 'chat-menu'">
+		<div></div>
+	</aside>
+</template>
 
-<style scoped lang="scss"></style>
+<style lang="scss">
+.chat-menu {
+	display: none;
+	background-color: #ef5350;
+	transition: all 0.3s ease;
+
+	&.open {
+		display: flex;
+		flex-basis: 100%;
+	}
+}
+</style>
