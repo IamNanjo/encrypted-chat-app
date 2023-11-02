@@ -2,7 +2,7 @@ const isProduction = process.env.NODE_ENV === "production";
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-	devtools: { enabled: true },
+	devtools: { enabled: false },
 	app: {
 		pageTransition: { name: "page", mode: "out-in" }
 	},
@@ -13,19 +13,16 @@ export default defineNuxtConfig({
 			cookieSecure: true,
 			cookieHttpOnly: true,
 			cookieSameSite: "strict",
-			expiryInSeconds: 7200,
+			expiryInSeconds: 3600,
 			rolling: true,
 			storePrefix: "session",
-			idLength: 128,
+			idLength: 256,
 			storageOptions: {
 				driver: isProduction ? "redis" : "memory",
-				options: isProduction
-					? {
-							base: "chatapp"
-					  }
-					: {}
+				options: { base: "sessions" }
 			}
-		}
+		},
+		api: { methods: ["get", "delete"] }
 	},
 	colorMode: { classSuffix: "", storageKey: "theme" }
 });
