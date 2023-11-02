@@ -1,16 +1,16 @@
 {
-  "apps": [
-    {
-      "name": "chat",
-      "script": ".output/server/index.mjs",
-      "exec_mode": "cluster",
-      "instances": "max",
-      "watch": false,
-      "env": {
-        "NODE_ENV": "production",
-        "PORT": 10443,
-        "DATABASE_URL": "file:/var/www/chat-app/prisma/chat-app-production.db"
-      }
-    }
-  ]
+	"apps": [
+		{
+			"name": "chat",
+			"script": ".output/server/index.mjs",
+			"exec_mode": "cluster",
+			"instances": "max",
+			"watch": false,
+			"env": {
+				"NODE_ENV": "production",
+				"PORT": 10443,
+				"DATABASE_URL": "file:/var/www/chat-app/prisma/chat-app-production.db"
+			}
+		}
+	]
 }
