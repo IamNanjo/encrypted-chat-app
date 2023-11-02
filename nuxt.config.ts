@@ -13,10 +13,10 @@ export default defineNuxtConfig({
 			cookieSecure: true,
 			cookieHttpOnly: true,
 			cookieSameSite: "strict",
-			expiryInSeconds: 3600,
-			rolling: true,
+			expiryInSeconds: 1800, // 30 minute sessions
+			rolling: true, // Refresh session on every request
 			storePrefix: "session",
-			idLength: 256,
+			idLength: 256, // Session id length of 256 instead of default 64
 			storageOptions: {
 				driver: isProduction ? "redis" : "memory",
 				options: { base: "sessions" }
@@ -24,5 +24,5 @@ export default defineNuxtConfig({
 		},
 		api: { methods: ["get", "delete"] }
 	},
-	colorMode: { classSuffix: "", storageKey: "theme" }
+	colorMode: { classSuffix: "", storageKey: "theme", fallback: "dark" }
 });
