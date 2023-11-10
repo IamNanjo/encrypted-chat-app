@@ -2,7 +2,7 @@
 const { session } = await useSession();
 const auth = useAuth();
 
-onMounted(async () => {
+onMounted(() => {
 	// Check session status on page load and update auth state
 	watch(session, (newSession) => {
 		if (newSession !== null) {
@@ -10,9 +10,11 @@ onMounted(async () => {
 				authenticated: "username" in newSession,
 				username: newSession.username || ""
 			};
-
-			if (!auth.value.authenticated) return navigateTo("/");
 		}
+	});
+
+	watch(auth, (newAuth) => {
+		if (!newAuth.authenticated) return navigateTo("/login");
 	});
 });
 </script>
