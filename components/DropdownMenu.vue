@@ -12,7 +12,8 @@
 	z-index: 10;
 
 	&:focus > &__options,
-	&:focus-within > &__options {
+	&:focus-within > &__options,
+	&__options:hover {
 		display: flex;
 	}
 
@@ -39,7 +40,6 @@
 			width: 100%;
 			height: 3em;
 			padding-inline: 1em;
-			cursor: pointer;
 
 			&:not(:last-child) {
 				border-bottom: 1px solid var(--bg-raise);
@@ -57,6 +57,7 @@
 		padding: 0.25em 0.5em;
 		border: 0;
 		border-radius: 6px;
+		cursor: pointer;
 	}
 }
 </style>

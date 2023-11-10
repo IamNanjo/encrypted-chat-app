@@ -1,3 +1,22 @@
+<script setup lang="ts">
+const { session } = await useSession();
+const auth = useAuth();
+
+onMounted(() => {
+	// Check session status on page load and update auth state
+	watch(session, (newSession) => {
+		if (newSession !== null && !auth.value.authenticated) {
+			auth.value = {
+				authenticated: "username" in newSession,
+				username: newSession.username || ""
+			};
+		} else {
+			return navigateTo("/login");
+		}
+	});
+});
+</script>
+
 <template>
 	<NavBar />
 	<NuxtPage />
@@ -91,6 +110,10 @@ a {
 
 button {
 	text-shadow: 2px 2px 4px black;
+}
+
+.clickable,
+button {
 	user-select: none;
 	cursor: pointer;
 }
