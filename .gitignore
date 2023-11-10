@@ -18,10 +18,6 @@ logs
 .fleet
 .idea
 
-# Local env files
-.env.*
-!.env.example
-
 prisma/migrations
 prisma/chat-app.db
 prisma/chat-app-production.db
