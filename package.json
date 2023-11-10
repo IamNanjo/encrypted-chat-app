@@ -1,28 +1,29 @@
 {
-	"name": "chat-app",
-	"private": true,
-	"type": "module",
-	"scripts": {
-		"build": "nuxt build",
-		"dev": "nuxt dev",
-		"dbinit": "prisma migrate dev --name init",
-		"dbgenerate": "prisma generate",
-		"start": "pm2 flush && pm2 restart pm2-process.json"
-	},
-	"devDependencies": {
-		"@nuxt/devtools": "latest",
-		"@types/bcrypt": "^5.0.1",
-		"nuxt": "^3.8.0",
-		"prisma": "^5.5.2",
-		"vue": "^3.3.7",
-		"vue-router": "^4.2.5"
-	},
-	"dependencies": {
-		"@nuxtjs/color-mode": "^3.3.0",
-		"@prisma/client": "5.5.2",
-		"@sidebase/nuxt-session": "^0.2.7",
-		"bcrypt": "^5.1.1",
-		"nuxt-icon": "^0.6.1",
-		"sass": "^1.69.5"
-	}
+  "name": "chat-app",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "dbinit": "prisma migrate dev --name init",
+    "dbgenerate": "prisma generate",
+    "start": "pm2 flush && pm2 restart pm2-process.json"
+  },
+  "devDependencies": {
+    "@nuxt/devtools": "latest",
+    "@types/bcrypt": "^5.0.1",
+    "nuxt": "^3.8.0",
+    "prisma": "^5.5.2",
+    "vue": "^3.3.7",
+    "vue-router": "^4.2.5"
+  },
+  "dependencies": {
+    "@nuxtjs/color-mode": "^3.3.0",
+    "@nuxtjs/plausible": "^0.2.3",
+    "@prisma/client": "5.5.2",
+    "@sidebase/nuxt-session": "^0.2.7",
+    "bcrypt": "^5.1.1",
+    "nuxt-icon": "^0.6.1",
+    "sass": "^1.69.5"
+  }
 }
