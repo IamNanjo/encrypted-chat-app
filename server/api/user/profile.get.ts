@@ -2,8 +2,7 @@ import { PrismaClient } from "@prisma/client";
 
 defineEventHandler(async (e) => {
 	if (!("userId" in e.context.session)) {
-		setResponseStatus(e, 401);
-		return send(e, "You must be logged in to access this resource");
+		return await sendRedirect(e, "/login");
 	}
 
 	const prisma = new PrismaClient();
