@@ -9,8 +9,6 @@ const { remove: removeSession } = await useSession({
 async function logOut() {
 	await removeSession();
 	auth.value = { authenticated: false, username: "" };
-	clearNuxtState();
-	clearNuxtData();
 	return await navigateTo("/login");
 }
 </script>
