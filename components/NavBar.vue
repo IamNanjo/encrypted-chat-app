@@ -31,7 +31,7 @@ async function logOut() {
 				</div>
 				<div>
 					<Icon name="material-symbols:brightness-4-rounded" size="1.5em" />
-					<select v-model="theme.preference">
+					<select v-model="theme.preference" title="Theme selection">
 						<option value="system">System</option>
 						<option value="dark">Dark</option>
 						<option value="light">Light</option>
