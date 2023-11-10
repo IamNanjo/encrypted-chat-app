@@ -111,7 +111,9 @@ a {
 }
 
 button {
-	text-shadow: 2px 2px 4px black;
+	text-shadow: 1px 1px 4px black;
+	box-shadow: none;
+	border-style: none;
 }
 
 .clickable,
