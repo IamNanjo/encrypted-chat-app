@@ -9,7 +9,12 @@ export default defineNuxtConfig({
 			title: "Encrypted Chat App"
 		}
 	},
-	modules: ["@sidebase/nuxt-session", "@nuxtjs/color-mode", "nuxt-icon"],
+	modules: [
+		"@sidebase/nuxt-session",
+		"@nuxtjs/color-mode",
+		"nuxt-icon",
+		"@nuxtjs/plausible"
+	],
 	session: {
 		isEnabled: true,
 		session: {
@@ -27,5 +32,6 @@ export default defineNuxtConfig({
 		},
 		api: { methods: ["get", "delete"] }
 	},
-	colorMode: { classSuffix: "", storageKey: "theme", fallback: "dark" }
+	colorMode: { classSuffix: "", storageKey: "theme", fallback: "dark" },
+	plausible: { apiHost: "https://plausible.nanjo.tech" }
 });
