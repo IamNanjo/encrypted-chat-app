@@ -19,7 +19,7 @@ export default defineNuxtConfig({
 			expiryInSeconds: 1800, // 30 minute sessions
 			rolling: true, // Refresh session on every request
 			storePrefix: "session",
-			idLength: 256, // Session id length of 256 instead of default 64
+			idLength: 128, // Session id length of 128 instead of default 64
 			storageOptions: {
 				driver: isProduction ? "redis" : "memory",
 				options: { base: "sessions" }
