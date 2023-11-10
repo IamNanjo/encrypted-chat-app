@@ -1,7 +1,24 @@
 <script setup lang="ts">
+const auth = useAuth();
+const { session, refresh } = await useSession();
+
 const username = ref("");
 const password = ref("");
 const error = ref("");
+
+onMounted(() => {
+	// Check session status on page load and update auth state
+	watch(session, (newSession) => {
+		if (newSession !== null) {
+			auth.value = {
+				authenticated: "username" in newSession,
+				username: newSession.username || ""
+			};
+
+			if (auth.value.authenticated) return navigateTo("/");
+		}
+	});
+});
 
 async function handleSubmit() {
 	error.value = "";
@@ -25,10 +42,7 @@ async function handleSubmit() {
 			error.value = (await response?.text()) || "Request failed";
 		},
 		async onResponse({ response }) {
-			if (response.redirected) {
-				console.log(`Redirecting to ${response.url}`);
-				return await navigateTo(response.url, { external: true });
-			}
+			if (response.redirected) await refresh();
 			error.value = (await response.text()) || response.statusText;
 		},
 		async onResponseError({ response }) {
@@ -42,10 +56,13 @@ async function handleSubmit() {
 	<main>
 		<form class="auth-form" @submit.prevent="handleSubmit">
 			<h1>Log In</h1>
+			<div class="or">or</div>
+			<NuxtLink to="/register">Sign up instead</NuxtLink>
 			<div class="form-group">
 				<label for="username">Username</label>
 				<input
 					required
+					autofocus
 					id="username"
 					type="text"
 					autocomplete="username"
@@ -68,14 +85,14 @@ async function handleSubmit() {
 	</main>
 </template>
 
-<style scoped lang="scss">
+<style lang="scss">
 .auth-form {
 	display: flex;
 	flex-direction: column;
 	flex-grow: 1;
 	gap: 2em;
-	background-color: rgba(255, 255, 255, 0.03);
-	max-width: 450px;
+	background-color: var(--bg-raise);
+	max-width: min(450px, 95%);
 	padding: 1em;
 	border-radius: 12px;
 	font-size: 1.125em;
@@ -83,6 +100,14 @@ async function handleSubmit() {
 	> h1 {
 		font-size: 2em;
 		text-align: center;
+	}
+
+	> a,
+	> .or {
+		color: var(--text-muted);
+		margin-top: -1em;
+		text-align: center;
+		font-size: 1.25em;
 	}
 
 	button[type="submit"] {

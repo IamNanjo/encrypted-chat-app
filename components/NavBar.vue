@@ -2,18 +2,27 @@
 const route = useRoute();
 const theme = useColorMode();
 const auth = useAuth();
+const { remove: removeSession } = await useSession({
+	fetchSessionOnInitialization: false
+});
+
+async function logOut() {
+	await removeSession();
+	auth.value = { authenticated: false, username: "" };
+	return await navigateTo("/login");
+}
 </script>
 
 <template>
 	<nav>
 		<div>
 			<ChatMenuToggle v-if="route.path === '/'" tabindex="0" />
-			<NuxtLink v-else to="/" tabindex="0"
+			<NuxtLink v-else to="/" tabindex="0" title="Back to app"
 				><Icon name="material-symbols:arrow-back-rounded" size="2em"
 			/></NuxtLink>
 		</div>
 		<DropdownMenu>
-			<div class="profile-menu__toggle" tabindex="0">
+			<div class="profile-menu__toggle" tabindex="0" title="Account">
 				<Icon name="material-symbols:account-circle" size="2em" />
 			</div>
 			<div class="profile-menu__options">
@@ -38,10 +47,14 @@ const auth = useAuth();
 					<Icon name="material-symbols:manage-accounts-rounded" size="1.5em" />
 					<div>Profile</div>
 				</NuxtLink>
-				<NuxtLink to="/logout" v-if="auth.authenticated">
+				<div
+					v-if="auth.authenticated"
+					class="clickable"
+					@click.prevent="logOut"
+				>
 					<Icon name="material-symbols:logout-rounded" size="1.5em" />
 					<div>Log out</div>
-				</NuxtLink>
+				</div>
 			</div>
 		</DropdownMenu>
 	</nav>

@@ -1,33 +1,54 @@
 <script setup lang="ts">
-const chatMenuOpen = useChatMenu();
-
-function onResize() {
-	const width = (window as Window).innerWidth;
-
-	if (width >= 800) {
-		chatMenuOpen.value = true;
-	}
-}
+const { session } = await useSession();
+const auth = useAuth();
 
 onMounted(() => {
-	onResize();
-	window.addEventListener("resize", onResize);
+	// Check session status on page load and update auth state
+	watch(session, (newSession) => {
+		if (newSession !== null) {
+			auth.value = {
+				authenticated: "username" in newSession,
+				username: newSession.username || ""
+			};
+		}
+	});
+
+	watch(auth, (newAuth) => {
+		if (!newAuth.authenticated) return navigateTo("/login");
+	});
 });
 </script>
 
 <template>
 	<main>
-		<ChatMenu v-if="chatMenuOpen" />
+		<ChatMenu />
+		<div class="chat"></div>
 	</main>
 </template>
 
 <style lang="scss">
+.chat {
+	display: flex;
+	background-color: var(--fg-primary);
+	flex-grow: 1;
+}
+
+.chat-menu,
+.chat {
+	height: 100%;
+}
+
 @media screen and (min-width: 800px) {
 	.mobile-menu {
 		display: block;
+
+		&__toggle {
+			display: none;
+		}
 	}
-	aside {
+	.chat-menu {
 		display: flex;
+		flex-basis: 15em;
 	}
 }
 </style>

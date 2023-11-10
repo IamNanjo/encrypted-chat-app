@@ -1,3 +1,22 @@
+<script setup lang="ts">
+const { session } = await useSession();
+const auth = useAuth();
+
+onMounted(() => {
+	// Check session status on page load and update auth state
+	watch(session, (newSession) => {
+		if (newSession !== null && !auth.value.authenticated) {
+			auth.value = {
+				authenticated: "username" in newSession,
+				username: newSession.username || ""
+			};
+		} else {
+			return navigateTo("/login");
+		}
+	});
+});
+</script>
+
 <template>
 	<NavBar />
 	<NuxtPage />
@@ -6,7 +25,7 @@
 <style lang="scss">
 .page-enter-active,
 .page-leave-active {
-	transition: all 0.2s;
+	transition: all 0.1s;
 }
 
 .page-enter-from,
@@ -24,18 +43,19 @@
 	font: inherit;
 	text-decoration: none;
 	transition-property: background-color, color;
-	transition-duration: 0.2s;
+	transition-duration: 0.1s;
 	transition-timing-function: linear;
 }
 
 :root {
 	color-scheme: light;
-	--bg-primary: #cccccc;
-	--bg-raise: rgba(0, 0, 0, 0.25);
-	--bg-raise-1: var(--bg-primary);
+	--bg-primary: hsl(0, 0%, 80%);
+	--bg-raise: rgba(0, 0, 0, 0.125);
+	--bg-raise-1: #bbbbbb;
 	--fg-primary: #ff6961;
 	--text-primary: black;
 	--text-alt: var(--fg-primary);
+	--text-muted: #444444;
 	--ff-primary: Roboto, sans-serif;
 	--ff-mono: "JetBrains Mono", monospace;
 }
@@ -47,6 +67,7 @@
 	--fg-primary: #ff6961;
 	--text-primary: white;
 	--text-alt: var(--fg-primary);
+	--text-muted: #999999;
 	--ff-primary: Roboto, sans-serif;
 	--ff-mono: "JetBrains Mono", monospace;
 }
@@ -91,6 +112,10 @@ a {
 
 button {
 	text-shadow: 2px 2px 4px black;
+}
+
+.clickable,
+button {
 	user-select: none;
 	cursor: pointer;
 }
