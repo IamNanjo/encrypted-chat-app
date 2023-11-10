@@ -29,8 +29,13 @@ onMounted(() => {
 <style lang="scss">
 .chat {
 	display: flex;
-	background-color: var(--fg-primary);
+	background-color: var(--bg-primary);
 	flex-grow: 1;
+}
+
+.chat-menu {
+	flex-basis: 100%;
+	transition: flex-basis 0.2s ease;
 }
 
 .chat-menu,
