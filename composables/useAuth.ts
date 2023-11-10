@@ -4,4 +4,4 @@ interface User {
 }
 
 export default () =>
-	useState<User>("auth", () => ({ authenticated: false, username: "" }));
+	useState<User>(() => ref({ authenticated: false, username: "" }));

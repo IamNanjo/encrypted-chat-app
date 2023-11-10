@@ -1,8 +1,25 @@
 <script setup lang="ts">
+const auth = useAuth();
+const { session, refresh } = await useSession();
+
 const username = ref("");
 const password = ref("");
 const passwordConfirm = ref("");
 const error = ref("");
+
+onMounted(() => {
+	// Check session status on page load and update auth state
+	watch(session, (newSession) => {
+		if (newSession !== null) {
+			auth.value = {
+				authenticated: "username" in newSession,
+				username: newSession.username || ""
+			};
+
+			if (auth.value.authenticated) return navigateTo("/");
+		}
+	});
+});
 
 async function handleSubmit() {
 	error.value = "";
@@ -32,10 +49,7 @@ async function handleSubmit() {
 			error.value = (await response?.text()) || "Request failed";
 		},
 		async onResponse({ response }) {
-			if (response.redirected) {
-				console.log(`Redirecting to ${response.url}`);
-				return await navigateTo(response.url, { external: true });
-			}
+			if (response.redirected) await refresh();
 			error.value = (await response.text()) || response.statusText;
 		},
 		async onResponseError({ response }) {
@@ -51,7 +65,13 @@ async function handleSubmit() {
 			<h1>Sign up</h1>
 			<div class="form-group">
 				<label for="username">Username</label>
-				<input required id="username" type="text" v-model="username" />
+				<input
+					required
+					autofocus
+					id="username"
+					type="text"
+					v-model="username"
+				/>
 			</div>
 			<div class="form-group">
 				<label for="password">Password</label>
