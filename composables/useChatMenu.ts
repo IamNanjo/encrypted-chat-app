@@ -1,1 +1,1 @@
-export default () => useState<boolean>("chatMenu", () => false);
+export default () => useState<boolean>(() => false);
