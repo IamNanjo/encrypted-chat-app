@@ -120,6 +120,10 @@ button {
 	cursor: pointer;
 }
 
+.no-select {
+	user-select: none;
+}
+
 .raise {
 	background-color: var(--bg-raise);
 }
