@@ -1,5 +1,9 @@
+<script setup lang="ts">
+defineProps<{ text: string }>();
+</script>
+
 <template>
-	<div class="alert"><slot /></div>
+	<div class="alert">{{ text }}</div>
 </template>
 
 <style lang="scss">
