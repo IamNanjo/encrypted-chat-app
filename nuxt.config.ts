@@ -4,7 +4,10 @@ const isProduction = process.env.NODE_ENV === "production";
 export default defineNuxtConfig({
 	devtools: { enabled: false },
 	app: {
-		pageTransition: { name: "page", mode: "out-in" }
+		pageTransition: { name: "page", mode: "out-in" },
+		head: {
+			title: "Encrypted Chat App"
+		}
 	},
 	modules: ["@sidebase/nuxt-session", "@nuxtjs/color-mode", "nuxt-icon"],
 	session: {
