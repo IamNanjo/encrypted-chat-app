@@ -21,32 +21,25 @@ onMounted(() => {
 });
 
 async function handleSubmit() {
-	error.value = "";
-
-	if (!username || !password) {
-		error.value = "You need to fill all the fields";
-		return;
+	if (!username.value || !password.value) {
+		return (error.value = "You need to fill all the fields");
 	}
 
-	await useFetch("/api/login", {
+	await useFetch("/api/user/login", {
 		method: "POST",
-		headers: {
-			"Content-Type": "application/json"
-		},
 		body: {
 			username: username.value,
 			password: password.value
 		},
-		redirect: "follow",
-		async onRequestError({ response }) {
-			error.value = (await response?.text()) || "Request failed";
+		async onRequestError() {
+			error.value = "Request failed";
 		},
 		async onResponse({ response }) {
-			if (response.redirected) await refresh();
-			error.value = (await response.text()) || response.statusText;
+			if (response.ok) return await refresh();
+			error.value = response._data || response.statusText;
 		},
 		async onResponseError({ response }) {
-			error.value = (await response.text()) || response.statusText;
+			error.value = response._data || response.statusText;
 		}
 	});
 }
@@ -80,7 +73,7 @@ async function handleSubmit() {
 				/>
 			</div>
 			<button type="submit">Log In</button>
-			<Alert v-if="error">{{ error }}</Alert>
+			<Alert v-if="error.length" :text="error"></Alert>
 		</form>
 	</main>
 </template>
