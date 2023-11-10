@@ -30,12 +30,20 @@ onMounted(() => {
 .chat {
 	display: flex;
 	background-color: var(--bg-primary);
-	flex-grow: 1;
+	flex-basis: 80%;
 }
 
 .chat-menu {
-	flex-basis: 100%;
-	transition: flex-basis 0.2s ease;
+	flex-basis: 0;
+	min-width: 0;
+	transition: flex 0.2s ease;
+	overflow-x: hidden;
+	overflow-y: auto;
+	text-wrap: nowrap;
+
+	&.open {
+		flex-basis: 100%;
+	}
 }
 
 .chat-menu,
@@ -43,17 +51,34 @@ onMounted(() => {
 	height: 100%;
 }
 
+.chat {
+	flex-basis: 100%;
+}
+
+.chat-menu.open + .chat {
+	flex-basis: 0;
+}
+
 @media screen and (min-width: 800px) {
 	.mobile-menu {
 		display: block;
 
 		&__toggle {
-			display: none;
+			transform: translateX(-5em) rotate(-90deg);
 		}
 	}
+
 	.chat-menu {
-		display: flex;
-		flex-basis: 15em;
+		border-right: 1px solid var(--bg-raise);
+	}
+
+	.chat-menu,
+	.chat-menu.open {
+		flex-basis: 16em;
+
+		& + .chat {
+			flex-basis: 100%;
+		}
 	}
 }
 </style>
