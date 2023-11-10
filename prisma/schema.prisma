@@ -14,30 +14,34 @@ model User {
   created          DateTime  @default(now())
   devices          Device[]
   chats            Chat[]    @relation("ChatMembers")
-  sentMessages     Message[] @relation(name: "messagesFrom")
-  receivedMessages Message[] @relation(name: "messagesTo")
+  sentMessages     Message[] @relation("MessagesFrom")
+  receivedMessages Message[] @relation("MessagesTo")
 }
 
 model Device {
-  id       String   @id @default(uuid())
+  id       String    @id @default(uuid())
   name     String
   key      String
-  created  DateTime @default(now())
-  lastUsed DateTime @default(now())
-  user     User     @relation(fields: [id], references: [id])
+  created  DateTime  @default(now())
+  lastUsed DateTime  @default(now())
+  user     User      @relation(fields: [id], references: [id])
+  Message  Message[]
 }
 
 model Chat {
   id      String    @id @default(uuid())
+  created DateTime  @default(now())
   members User[]    @relation("ChatMembers")
   Message Message[]
 }
 
 model Message {
-  id      String   @id @default(uuid())
-  content String
-  created DateTime @default(now())
-  chat    Chat     @relation(fields: [id], references: [id])
-  from    User     @relation(fields: [id], references: [id], name: "messagesFrom")
-  to      User     @relation(fields: [id], references: [id], name: "messagesTo")
+  id       String   @id @default(uuid())
+  deviceId String
+  content  String
+  created  DateTime @default(now())
+  device   Device   @relation(fields: [deviceId], references: [id])
+  chat     Chat     @relation(fields: [id], references: [id])
+  from     User     @relation(fields: [id], references: [id], name: "MessagesFrom")
+  to       User     @relation(fields: [id], references: [id], name: "MessagesTo")
 }
