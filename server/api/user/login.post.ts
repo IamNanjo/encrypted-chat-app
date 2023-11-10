@@ -35,5 +35,5 @@ export default defineEventHandler(async (e) => {
 
 	e.context.session.userId = user.id;
 	e.context.session.username = user.username;
-	return await sendRedirect(e, "/");
+	return await send(e);
 });
