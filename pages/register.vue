@@ -63,6 +63,8 @@ async function handleSubmit() {
 	<main>
 		<form class="auth-form" @submit.prevent="handleSubmit">
 			<h1>Sign up</h1>
+			<div class="or">or</div>
+			<NuxtLink to="/login">Log in instead</NuxtLink>
 			<div class="form-group">
 				<label for="username">Username</label>
 				<input
@@ -105,7 +107,7 @@ async function handleSubmit() {
 	flex-direction: column;
 	flex-grow: 1;
 	gap: 2em;
-	background-color: rgba(255, 255, 255, 0.03);
+	background-color: var(--bg-raise);
 	max-width: min(450px, 95%);
 	padding: 1em;
 	border-radius: 12px;
@@ -114,6 +116,16 @@ async function handleSubmit() {
 	> h1 {
 		font-size: 2em;
 		text-align: center;
+	}
+
+	> a,
+	> .or {
+		color: var(--text-muted);
+		width: max-content;
+		margin-inline: auto;
+		margin-top: -1.25em;
+		font-size: 1.25em;
+		user-select: none;
 	}
 
 	button[type="submit"] {
