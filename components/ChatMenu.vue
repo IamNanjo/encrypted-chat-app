@@ -40,7 +40,6 @@ async function newChat() {}
 	flex-direction: column;
 	background-color: var(--bg-primary);
 	font-size: 1.125em;
-	border-right: 1px solid var(--bg-raise);
 
 	.icon {
 		filter: drop-shadow(1px 1px 1px black);
