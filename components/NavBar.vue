@@ -26,7 +26,9 @@ async function logOut() {
 				<Icon name="material-symbols:account-circle" size="2em" />
 			</div>
 			<div class="profile-menu__options">
-				<div v-if="auth.authenticated">Logged in as {{ auth.username }}</div>
+				<div v-if="auth.authenticated" class="no-select">
+					Logged in as {{ auth.username }}
+				</div>
 				<div>
 					<Icon name="material-symbols:brightness-4-rounded" size="1.5em" />
 					<select v-model="theme.preference">
