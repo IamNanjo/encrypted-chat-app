@@ -26,16 +26,13 @@ Start the development server on `http://localhost:3000`:
 
 ```bash
 # npm
-npm run dev
-
-# pnpm
-pnpm run dev
+npm run dev -- --dotenv .env.development
 
 # yarn
-yarn dev
+yarn dev --dotenv .env.development
 
 # bun
-bun run dev
+bun run dev --dotenv .env.development
 ```
 
 ## Production
@@ -45,9 +42,6 @@ Build the application for production:
 ```bash
 # npm
 npm run build
-
-# pnpm
-pnpm run build
 
 # yarn
 yarn build
@@ -61,9 +55,6 @@ Locally preview production build:
 ```bash
 # npm
 npm run preview
-
-# pnpm
-pnpm run preview
 
 # yarn
 yarn preview
