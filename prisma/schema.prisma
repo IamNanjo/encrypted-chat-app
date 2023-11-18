@@ -25,14 +25,14 @@ model Device {
   created  DateTime  @default(now())
   lastUsed DateTime  @default(now())
   user     User      @relation(fields: [id], references: [id])
-  Message  Message[]
+  messages  Message[]
 }
 
 model Chat {
   id      String    @id @default(uuid())
   created DateTime  @default(now())
   members User[]    @relation("ChatMembers")
-  Message Message[]
+  messages Message[]
 }
 
 model Message {
