@@ -20,7 +20,7 @@
   "dependencies": {
     "@nuxtjs/color-mode": "^3.3.0",
     "@nuxtjs/plausible": "^0.2.3",
-    "@prisma/client": "5.5.2",
+    "@prisma/client": "5.6.0",
     "@sidebase/nuxt-session": "^0.2.7",
     "bcrypt": "^5.1.1",
     "nuxt-icon": "^0.6.1",
