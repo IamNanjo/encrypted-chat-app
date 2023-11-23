@@ -1,6 +1,7 @@
 <script setup lang="ts">
 const { session } = await useSession();
 const auth = useAuth();
+const sse = useSSE();
 
 onMounted(() => {
 	// Check session status on page load and update auth state
@@ -14,6 +15,8 @@ onMounted(() => {
 			return navigateTo("/login");
 		}
 	});
+
+	sse.value = new EventSource("/api/sse");
 });
 </script>
 
@@ -51,7 +54,7 @@ onMounted(() => {
 	color-scheme: light;
 	--bg-primary: hsl(0, 0%, 80%);
 	--bg-raise: rgba(0, 0, 0, 0.125);
-	--bg-raise-1: #bbbbbb;
+	--bg-raise-1: var(--bg-primary);
 	--fg-primary: #ff6961;
 	--text-primary: black;
 	--text-alt: var(--fg-primary);
@@ -77,6 +80,7 @@ onMounted(() => {
 }
 :root.dark .icon {
 	color: white;
+	filter: drop-shadow(1px 1px 1px black);
 }
 
 body {
@@ -111,7 +115,6 @@ a {
 }
 
 button {
-	text-shadow: 1px 1px 4px black;
 	box-shadow: none;
 	border-style: none;
 }
@@ -120,6 +123,10 @@ button {
 button {
 	user-select: none;
 	cursor: pointer;
+}
+
+:disabled {
+	cursor: not-allowed;
 }
 
 .no-select {
