@@ -10,14 +10,27 @@ Make sure to install the dependencies:
 # npm
 npm install
 
-# pnpm
-pnpm install
-
 # yarn
 yarn install
 
 # bun
 bun install
+```
+
+## Database Setup
+
+```bash
+# npm
+npm run dbinit
+npm run dbgenerate
+
+# yarn
+yarn dbinit
+yarn dbgenerate
+
+# bun
+bun dbinit
+bun dbgenerate
 ```
 
 ## Development Server
@@ -26,13 +39,13 @@ Start the development server on `http://localhost:3000`:
 
 ```bash
 # npm
-npm run dev -- --dotenv .env.development
+npm run dev
 
 # yarn
-yarn dev --dotenv .env.development
+yarn dev
 
 # bun
-bun run dev --dotenv .env.development
+bun run dev
 ```
 
 ## Production
