@@ -154,7 +154,7 @@ onMounted(() => {
 
 	interval.value = window.setInterval(() => {
 		now.value = Date.now();
-		// if (refreshCounter.value % 10 === 0) refreshMessages({ dedupe: true });
+		if (refreshCounter.value % 10 === 0) refreshMessages({ dedupe: true });
 		refreshCounter.value++;
 	}, 500);
 });
