@@ -5,7 +5,5 @@ export default defineEventHandler(async (e) => {
 		return await sendRedirect(e, "/login");
 	}
 
-	hooks.callHook("sse:event", "messages");
-
 	return await send(e);
 });

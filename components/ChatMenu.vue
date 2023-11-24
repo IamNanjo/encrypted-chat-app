@@ -146,7 +146,7 @@ async function deleteChat(id: string) {
 
 .new-chat {
 	&__modal {
-		display: flex;
+		display: none;
 		flex-direction: column;
 		justify-content: space-around;
 		gap: 1em;
@@ -163,9 +163,12 @@ async function deleteChat(id: string) {
 		border-radius: 12px;
 		box-shadow: 1px 1px 4px 2px black;
 		transform: translate(-50%, -50%);
-		z-index: -10;
 
 		--border-radius: 6px;
+
+		&[open] {
+			display: flex;
+		}
 
 		> * {
 			flex: 0;

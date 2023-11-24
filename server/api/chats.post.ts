@@ -55,8 +55,6 @@ export default defineEventHandler(async (e) => {
 		}
 	});
 
-	hooks.callHook("sse:event", "chats");
-
 	setResponseStatus(e, 201);
 	return chat;
 });
