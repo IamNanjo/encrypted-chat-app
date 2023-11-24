@@ -22,7 +22,7 @@ const {
 	{ server: false }
 );
 
-const { data: users, pending: usersPending } = await useLazyAsyncData(
+const { data: users } = await useLazyAsyncData(
 	() => $fetch("/api/users", { query: { q: userSearch.value } }),
 	{
 		server: false,
