@@ -64,8 +64,10 @@ async function deleteChat(id: string) {
 					placeholder="Search"
 				/>
 				<div class="new-chat__search-results">
+					<div v-if="!users || !users.length">No results</div>
 					<button
 						:key="user.id"
+						v-else
 						v-for="user in users"
 						@click="() => newChat(user.id)"
 					>
@@ -75,7 +77,7 @@ async function deleteChat(id: string) {
 				<button class="new-chat__cancel" type="submit">Cancel</button>
 			</form>
 		</dialog>
-		<div class="clickable new-chat" @click="showUserSelect">
+		<div class="clickable new-chat" @click="showUserSelect" tabindex="0">
 			<span>New Chat</span>
 			<Icon name="material-symbols:chat-add-on-rounded" size="1.5em" />
 		</div>
@@ -199,7 +201,7 @@ async function deleteChat(id: string) {
 			background-color: var(--bg-raise);
 			padding: 0.5em;
 			border: 1px solid var(--bg-raise);
-			cursor: pointer;
+			user-select: none;
 
 			&:first-child {
 				border-top-left-radius: var(--border-radius);
