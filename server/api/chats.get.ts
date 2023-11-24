@@ -7,8 +7,6 @@ export default defineEventHandler(async (e) => {
 
 	const prisma = new PrismaClient();
 
-	// await prisma.chat.deleteMany();
-
 	return prisma.chat.findMany({
 		where: { members: { some: { id: e.context.session.userId } } },
 		orderBy: { created: "desc" },
