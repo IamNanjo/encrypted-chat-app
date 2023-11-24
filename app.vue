@@ -10,7 +10,8 @@ onMounted(() => {
 		if (newSession !== null && !auth.value.authenticated) {
 			auth.value = {
 				authenticated: "username" in newSession,
-				username: newSession.username || ""
+				username: newSession.username || "",
+				currentDevice: null
 			};
 		} else {
 			return navigateTo("/login");
@@ -30,9 +31,9 @@ onMounted(() => {
 		const newKeys = crypto.subtle.generateKey(
 			{
 				name: "RSA-OAEP",
-				modulusLength: 8192,
+				modulusLength: 4096,
 				publicExponent: new Uint8Array([1, 0, 1]),
-				hash: "SHA-512"
+				hash: "SHA-256"
 			} as RsaHashedKeyGenParams,
 			true,
 			["encrypt", "decrypt"]
@@ -43,7 +44,6 @@ onMounted(() => {
 				crypto.subtle.exportKey("jwk", privateKey),
 				crypto.subtle.exportKey("jwk", publicKey)
 			]).then(([exportedPrivateKey, exportedPublicKey]) => {
-				console.log(exportedPrivateKey, exportedPublicKey);
 				localStorage.setItem("privateKey", JSON.stringify(exportedPrivateKey));
 				localStorage.setItem("publicKey", JSON.stringify(exportedPublicKey));
 
@@ -59,14 +59,14 @@ onMounted(() => {
 			crypto.subtle.importKey(
 				"jwk",
 				JSON.parse(storedKeyPair.privateKey),
-				{ name: "RSA-OAEP", hash: "SHA-512" },
+				{ name: "RSA-OAEP", hash: "SHA-256" },
 				true,
 				["decrypt"]
 			),
 			crypto.subtle.importKey(
 				"jwk",
 				JSON.parse(storedKeyPair.publicKey),
-				{ name: "RSA-OAEP", hash: "SHA-512" },
+				{ name: "RSA-OAEP", hash: "SHA-256" },
 				true,
 				["encrypt"]
 			)
@@ -74,6 +74,25 @@ onMounted(() => {
 			keyPair.value = { privateKey, publicKey };
 		});
 	}
+
+	// Save public key / device into the database
+	watch([auth, keyPair], async ([newAuth, newKeyPair]) => {
+		if (
+			newAuth.authenticated &&
+			newKeyPair &&
+			!newAuth.currentDevice &&
+			localStorage.getItem("publicKey")
+		) {
+			const device = await useFetch("/api/device", {
+				method: "post",
+				body: { key: localStorage.getItem("publicKey") }
+			});
+
+			if (device.status.value === "success") {
+				auth.value.currentDevice = device.data.value;
+			}
+		}
+	});
 });
 </script>
 
