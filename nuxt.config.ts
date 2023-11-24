@@ -33,7 +33,12 @@ export default defineNuxtConfig({
 		},
 		api: { methods: ["get", "delete"] }
 	},
-	colorMode: { classSuffix: "", storageKey: "theme", fallback: "dark", preference: "dark" },
+	colorMode: {
+		classSuffix: "",
+		storageKey: "theme",
+		fallback: "dark",
+		preference: "dark"
+	},
 	plausible: { apiHost: "https://plausible.nanjo.tech" },
 	googleFonts: {
 		families: {
