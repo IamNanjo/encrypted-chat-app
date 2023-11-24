@@ -1,10 +1,10 @@
-interface Message {}
-
-interface Chat {
+export type Chat = {
 	id: string;
-	keys: string[];
-	messages: Message[];
-}
+	members: {
+		id: string;
+		username: string;
+		devices: { id: string; key: string }[];
+	}[];
+};
 
-export default () =>
-	useState<Chat>(() => ref({ id: "", keys: [], messages: [] }));
+export default () => useState<Chat | null>(() => null);
