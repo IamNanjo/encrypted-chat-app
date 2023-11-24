@@ -2,6 +2,7 @@
 const { session } = await useSession();
 const auth = useAuth();
 const sse = useSSE();
+const keyPair = useKeyPair();
 
 onMounted(() => {
 	// Check session status on page load and update auth state
@@ -17,6 +18,62 @@ onMounted(() => {
 	});
 
 	sse.value = new EventSource("/api/sse");
+
+	// Save / Load saved key pair from localStorage
+
+	let storedKeyPair = {
+		privateKey: localStorage.getItem("privateKey"),
+		publicKey: localStorage.getItem("publicKey")
+	};
+
+	if (!storedKeyPair.privateKey || !storedKeyPair.publicKey) {
+		const newKeys = crypto.subtle.generateKey(
+			{
+				name: "RSA-OAEP",
+				modulusLength: 8192,
+				publicExponent: new Uint8Array([1, 0, 1]),
+				hash: "SHA-512"
+			} as RsaHashedKeyGenParams,
+			true,
+			["encrypt", "decrypt"]
+		) as Promise<CryptoKeyPair>;
+
+		newKeys.then(({ privateKey, publicKey }) => {
+			Promise.all([
+				crypto.subtle.exportKey("jwk", privateKey),
+				crypto.subtle.exportKey("jwk", publicKey)
+			]).then(([exportedPrivateKey, exportedPublicKey]) => {
+				console.log(exportedPrivateKey, exportedPublicKey);
+				localStorage.setItem("privateKey", JSON.stringify(exportedPrivateKey));
+				localStorage.setItem("publicKey", JSON.stringify(exportedPublicKey));
+
+				keyPair.value = {
+					privateKey,
+					publicKey
+				};
+			});
+		});
+	} else {
+		// Import private and public key concurrently
+		Promise.all([
+			crypto.subtle.importKey(
+				"jwk",
+				JSON.parse(storedKeyPair.privateKey),
+				{ name: "RSA-OAEP", hash: "SHA-512" },
+				true,
+				["decrypt"]
+			),
+			crypto.subtle.importKey(
+				"jwk",
+				JSON.parse(storedKeyPair.publicKey),
+				{ name: "RSA-OAEP", hash: "SHA-512" },
+				true,
+				["encrypt"]
+			)
+		]).then(([privateKey, publicKey]) => {
+			keyPair.value = { privateKey, publicKey };
+		});
+	}
 });
 </script>
 
@@ -55,6 +112,7 @@ onMounted(() => {
 	--bg-primary: hsl(0, 0%, 80%);
 	--bg-raise: rgba(0, 0, 0, 0.125);
 	--bg-raise-1: var(--bg-primary);
+	--bg-raise-2: var(--bg-raise);
 	--fg-primary: #ff6961;
 	--text-primary: black;
 	--text-alt: var(--fg-primary);
@@ -67,6 +125,7 @@ onMounted(() => {
 	--bg-primary: #121212;
 	--bg-raise: rgba(255, 255, 255, 0.07);
 	--bg-raise-1: #232323;
+	--bg-raise-2: #333333;
 	--fg-primary: #ff6961;
 	--text-primary: white;
 	--text-alt: var(--fg-primary);
