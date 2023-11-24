@@ -34,7 +34,10 @@ const {
 
 				return data;
 			})
-			.catch(console.error),
+			.catch((err) => {
+				console.error(err);
+				return [];
+			}),
 	{
 		server: false,
 		immediate: false
@@ -119,12 +122,9 @@ function getRelativeTime(timestamp: string) {
 
 function decryptMessage(content: string) {
 	if (!keyPair.value) {
-		console.error("Key pair is null. Reload needed");
 		reloadNuxtApp({ force: true });
 		return new Promise<string>((res) => res("Encrypted data"));
 	}
-
-	console.info(keyPair.value.privateKey);
 
 	return crypto.subtle
 		.decrypt(
@@ -137,7 +137,6 @@ function decryptMessage(content: string) {
 			return decryptedMessage;
 		})
 		.catch((err) => {
-			console.error(err);
 			return "Encrypted data";
 		});
 }
