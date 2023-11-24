@@ -1,15 +1,18 @@
 import { PrismaClient } from "@prisma/client";
 
 export default defineEventHandler(async (e) => {
-	const query = getQuery(e) as { chatId?: string; key?: string };
-
-	const chatId = query.chatId?.toString();
-	const key = query.key?.toString();
-
-	if (!chatId || !key) return [];
-
 	if (!("userId" in e.context.session)) {
 		return await sendRedirect(e, "/login");
+	}
+
+	const query = getQuery(e) as { chatId?: string; deviceId?: string };
+
+	const chatId = query.chatId;
+	const deviceId = query.deviceId;
+
+	if (!chatId || !deviceId) {
+		setResponseStatus(e, 400);
+		return [];
 	}
 
 	const prisma = new PrismaClient();
@@ -20,7 +23,16 @@ export default defineEventHandler(async (e) => {
 				id: chatId,
 				members: { some: { id: e.context.session.userId } }
 			},
-			device: { key }
+			device: { id: deviceId }
+		},
+		orderBy: { created: "asc" },
+		select: {
+			id: true,
+			content: true,
+			created: true,
+			sender: {
+				select: { username: true }
+			}
 		}
 	});
 
