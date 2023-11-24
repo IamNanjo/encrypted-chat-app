@@ -53,6 +53,7 @@ async function logOut() {
 					v-if="auth.authenticated"
 					class="clickable"
 					@click.prevent="logOut"
+					tabindex="0"
 				>
 					<Icon name="material-symbols:logout-rounded" size="1.5em" />
 					<div>Log out</div>
