@@ -1,7 +1,6 @@
 <script setup lang="ts">
 const { session } = await useSession();
 const auth = useAuth();
-const sse = useSSE();
 const keyPair = useKeyPair();
 
 onMounted(() => {
@@ -17,8 +16,6 @@ onMounted(() => {
 			return navigateTo("/login");
 		}
 	});
-
-	sse.value = new EventSource("/api/sse");
 
 	// Save / Load saved key pair from localStorage
 

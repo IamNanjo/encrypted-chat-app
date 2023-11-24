@@ -1,7 +1,6 @@
 <script setup lang="ts">
 const auth = useAuth();
 const chat = useChat();
-const sse = useSSE();
 const keyPair = useKeyPair();
 
 const newMessage = ref("");
@@ -150,12 +149,6 @@ onMounted(() => {
 				e.preventDefault();
 				sendMessage();
 			}
-		};
-	}
-
-	if (sse.value) {
-		sse.value.onmessage = async (e) => {
-			await refreshMessages({ dedupe: true });
 		};
 	}
 

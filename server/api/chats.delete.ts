@@ -31,7 +31,5 @@ export default defineEventHandler(async (e) => {
 		where: { id: chatId, members: { some: { id: userId } } }
 	});
 
-	hooks.callHook("sse:event", "chats");
-
 	return await send(e);
 });
