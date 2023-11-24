@@ -8,7 +8,8 @@ onMounted(() => {
 		if (newSession !== null) {
 			auth.value = {
 				authenticated: "username" in newSession,
-				username: newSession.username || ""
+				username: newSession.username || "",
+				currentDevice: null
 			};
 		}
 	});
@@ -22,17 +23,11 @@ onMounted(() => {
 <template>
 	<main>
 		<ChatMenu />
-		<div class="chat"></div>
+		<Chat />
 	</main>
 </template>
 
 <style lang="scss">
-.chat {
-	display: flex;
-	background-color: var(--bg-primary);
-	flex-basis: 80%;
-}
-
 .chat-menu {
 	flex-basis: 0;
 	min-width: 0;
@@ -57,6 +52,7 @@ onMounted(() => {
 
 .chat-menu.open + .chat {
 	flex-basis: 0;
+	padding: 0;
 }
 
 @media screen and (min-width: 800px) {
@@ -70,15 +66,15 @@ onMounted(() => {
 
 	.chat-menu {
 		border-right: 1px solid var(--bg-raise);
+
+		& + .chat {
+			flex-basis: 100%;
+		}
 	}
 
 	.chat-menu,
 	.chat-menu.open {
 		flex-basis: 16em;
-
-		& + .chat {
-			flex-basis: 100%;
-		}
 	}
 }
 </style>
