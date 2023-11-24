@@ -1,14 +1,14 @@
 import { PrismaClient } from "@prisma/client";
 
-defineEventHandler(async (e) => {
+export default defineEventHandler(async (e) => {
 	if (!("userId" in e.context.session)) {
 		return await sendRedirect(e, "/login");
 	}
 
 	const prisma = new PrismaClient();
 
-	const profile = await prisma.user.findUnique({
-		where: { id: e.context.session.userId },
+	const profile = await prisma.user.findMany({
+		// where: { id: e.context.session.userId },
 		select: {
 			id: true,
 			username: true,
