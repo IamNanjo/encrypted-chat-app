@@ -29,7 +29,6 @@ const {
 		})
 			.then(async (data) => {
 				for (let i = 0, len = data.length; i < len; i++) {
-					console.log(new TextEncoder().encode(data[i].content));
 					data[i].content = await decryptMessage(data[i].content);
 				}
 
@@ -134,11 +133,7 @@ function decryptMessage(content: string) {
 			new TextEncoder().encode(content)
 		)
 		.then((decryptedMessageBuffer) => {
-			console.log(decryptedMessageBuffer);
-
 			const decryptedMessage = new TextDecoder().decode(decryptedMessageBuffer);
-
-			console.log(decryptedMessage);
 			return decryptedMessage;
 		})
 		.catch((err) => {
