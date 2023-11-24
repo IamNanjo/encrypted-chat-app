@@ -41,6 +41,10 @@
 			height: 3em;
 			padding-inline: 1em;
 
+			&:hover {
+				background-color: var(--bg-raise);
+			}
+
 			&:not(:last-child) {
 				border-bottom: 1px solid var(--bg-raise);
 			}
