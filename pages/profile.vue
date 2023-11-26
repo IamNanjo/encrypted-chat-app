@@ -1,4 +1,8 @@
 <script setup lang="ts">
+definePageMeta({
+	middleware: ["auth"]
+});
+
 const auth = useAuth();
 const { data: profile, pending } = await useLazyFetch("/api/user/profile");
 
