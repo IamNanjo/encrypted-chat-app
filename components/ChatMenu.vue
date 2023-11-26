@@ -8,24 +8,18 @@ const userSearch = ref("");
 const {
 	data: chats,
 	pending,
+	execute: getChats,
 	refresh: refreshChats
-} = await useLazyAsyncData(
-	() =>
-		$fetch("/api/chats", {
-			onResponse({ response }) {
-				if (response.redirected) {
-					navigateTo("/login");
-					return;
-				}
-			}
-		}),
-	{ server: false }
-);
+} = await useLazyAsyncData(() => $fetch("/api/chats"), {
+	server: false,
+	immediate: false
+});
 
-const { data: users } = await useLazyAsyncData(
+const { data: users, execute: getUsers } = await useLazyAsyncData(
 	() => $fetch("/api/users", { query: { q: userSearch.value } }),
 	{
 		server: false,
+		immediate: false,
 		watch: [userSearch]
 	}
 );
@@ -48,9 +42,17 @@ async function deleteChat(id: string) {
 	if (selectedChat.value && selectedChat.value.id === id) {
 		selectedChat.value = null;
 	}
+
 	await useFetch("/api/chats", { method: "delete", body: { id } });
 	await refreshChats({ dedupe: true });
 }
+
+onMounted(() => {
+	if (!auth.value.authenticated) return navigateTo("/login");
+
+	getUsers();
+	getChats();
+});
 </script>
 
 <template>
