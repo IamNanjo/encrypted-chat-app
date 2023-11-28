@@ -124,7 +124,7 @@ function getRelativeTime(timestamp: string) {
 
 async function decryptMessage(encryptedContent: string) {
 	if (!keyPair.value) {
-		reloadNuxtApp({ force: true });
+		reloadNuxtApp({ force: true, persistState: true });
 		return encryptedContent;
 	}
 
