@@ -1,5 +1,14 @@
 import { prisma } from "~/server/db";
 
+export interface Message {
+	id: string;
+	content: string;
+	created: string;
+	sender: {
+		username: string;
+	};
+}
+
 export default defineEventHandler(async (e) => {
 	if (!("userId" in e.context.session)) {
 		return await sendRedirect(e, "/login");
@@ -12,7 +21,7 @@ export default defineEventHandler(async (e) => {
 
 	if (!chatId || !deviceId) {
 		setResponseStatus(e, 400);
-		return [];
+		return [] as Message[];
 	}
 
 	const messages = await prisma.message.findMany({
