@@ -15,6 +15,10 @@ export default defineEventHandler(async (e) => {
 
 	const ua = getHeader(e, "User-Agent") || "Unknown device";
 
+	// Delete devices that have not been used in 7 days
+	const oneWeekAgo = new Date(Date.now() - 604800000);
+	await prisma.device.deleteMany({ where: { lastUsed: { lte: oneWeekAgo } } });
+
 	// Add new device for the user or update the lastUsed date
 	return prisma.device.upsert({
 		where: { key: body.key },
