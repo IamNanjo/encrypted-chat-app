@@ -5,6 +5,8 @@ const selectedChat = useChat();
 
 const userSearch = ref("");
 
+const interval = ref(0);
+
 interface RawChat {
 	id: string;
 	members: {
@@ -20,6 +22,7 @@ const {
 	execute: getChats,
 	refresh: refreshChats
 } = await useLazyAsyncData(
+	"chats",
 	async () => {
 		const data = await $fetch("/api/chats");
 		return parseChats(data);
@@ -31,6 +34,7 @@ const {
 );
 
 const { data: users, execute: getUsers } = await useLazyAsyncData(
+	"users",
 	() => $fetch("/api/users", { query: { q: userSearch.value } }),
 	{
 		server: false,
@@ -115,6 +119,14 @@ async function deleteChat(e: Event, id: string) {
 onMounted(() => {
 	getUsers();
 	getChats();
+
+	interval.value = window.setInterval(() => {
+		refreshChats({ dedupe: true });
+	}, 5000);
+});
+
+onBeforeUnmount(() => {
+	clearInterval(interval.value);
 });
 </script>
 
@@ -147,8 +159,7 @@ onMounted(() => {
 			<Icon name="material-symbols:chat-add-on-rounded" size="1.5em" />
 		</div>
 		<div class="chat-list">
-			<div v-if="pending">Loading...</div>
-			<div v-else-if="!chats || !chats.length">No chats found</div>
+			<div v-if="!chats || !chats.length">No chats found</div>
 			<button
 				v-else
 				v-for="chat in chats"
