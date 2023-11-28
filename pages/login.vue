@@ -1,10 +1,8 @@
 <script setup lang="ts">
-definePageMeta({
-	middleware: ["auth"]
-});
-
 const auth = useAuth();
-const { session, refresh } = await useSession();
+const { session, refresh } = await useSession({
+	fetchSessionOnInitialization: false
+});
 
 const username = ref("");
 const password = ref("");
@@ -16,6 +14,7 @@ onMounted(() => {
 		if (newSession !== null) {
 			auth.value = {
 				authenticated: "username" in newSession,
+				userId: newSession.userId || "",
 				username: newSession.username || "",
 				currentDevice: null
 			};

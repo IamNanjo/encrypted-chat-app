@@ -1,23 +1,7 @@
 <script setup lang="ts">
-definePageMeta({
-	middleware: ["auth"]
-});
-
-const { session } = await useSession();
 const auth = useAuth();
 
 onMounted(() => {
-	// Check session status on page load and update auth state
-	watch(session, (newSession) => {
-		if (newSession !== null) {
-			auth.value = {
-				authenticated: "username" in newSession,
-				username: newSession.username || "",
-				currentDevice: null
-			};
-		}
-	});
-
 	watch(auth, (newAuth) => {
 		if (!newAuth.authenticated) return navigateTo("/login");
 	});
