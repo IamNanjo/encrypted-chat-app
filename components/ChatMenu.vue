@@ -5,15 +5,30 @@ const selectedChat = useChat();
 
 const userSearch = ref("");
 
+interface RawChat {
+	id: string;
+	members: {
+		id: string;
+		username: string;
+		devices: { id: string; key: string }[];
+	}[];
+}
+
 const {
 	data: chats,
 	pending,
 	execute: getChats,
 	refresh: refreshChats
-} = await useLazyAsyncData(() => $fetch("/api/chats"), {
-	server: false,
-	immediate: false
-});
+} = await useLazyAsyncData(
+	async () => {
+		const data = await $fetch("/api/chats");
+		return parseChats(data);
+	},
+	{
+		server: false,
+		immediate: false
+	}
+);
 
 const { data: users, execute: getUsers } = await useLazyAsyncData(
 	() => $fetch("/api/users", { query: { q: userSearch.value } }),
@@ -24,21 +39,71 @@ const { data: users, execute: getUsers } = await useLazyAsyncData(
 	}
 );
 
+async function parseChat(rawChat: RawChat): Promise<Chat> {
+	let temp: Chat = { id: rawChat.id, members: [] };
+
+	for (let i = 0, iLen = rawChat.members.length; i < iLen; i++) {
+		const member = rawChat.members[i];
+
+		temp.members.push({
+			id: member.id,
+			username: member.username,
+			devices: []
+		});
+
+		for (let j = 0, jlen = member.devices.length; j < jlen; j++) {
+			const device = member.devices[j];
+			const parsedKey = await crypto.subtle.importKey(
+				"jwk",
+				JSON.parse(device.key),
+				{ name: "RSA-OAEP", hash: "SHA-256" },
+				true,
+				["encrypt"]
+			);
+
+			temp.members[i].devices.push({ id: device.id, key: parsedKey });
+		}
+	}
+
+	return temp;
+}
+
+async function parseChats(rawChats: RawChat[]): Promise<Chat[]> {
+	const temp: Chat[] = [];
+
+	for (let i = 0, len = rawChats.length; i < len; i++) {
+		temp.push(await parseChat(rawChats[i]));
+	}
+
+	return temp;
+}
+
 function showUserSelect() {
 	const modal = document.getElementById("new-chat__modal") as HTMLDialogElement;
 	modal.showModal();
 }
 
 async function newChat(user: string) {
-	await useFetch("/api/chats", {
+	const chat = await useFetch("/api/chats", {
 		method: "post",
 		body: { user }
 	});
 
 	await refreshChats({ dedupe: true });
+	isOpen.value = false;
+	if (chat.status.value === "success" && chat.data.value !== null) {
+		selectChat(await parseChat(chat.data.value));
+	}
 }
 
-async function deleteChat(id: string) {
+function selectChat(chat: Chat) {
+	selectedChat.value = chat;
+	isOpen.value = false;
+}
+
+async function deleteChat(e: Event, id: string) {
+	e.stopPropagation();
+
 	if (selectedChat.value && selectedChat.value.id === id) {
 		selectedChat.value = null;
 	}
@@ -48,8 +113,6 @@ async function deleteChat(id: string) {
 }
 
 onMounted(() => {
-	if (!auth.value.authenticated) return navigateTo("/login");
-
 	getUsers();
 	getChats();
 });
@@ -91,7 +154,7 @@ onMounted(() => {
 				v-for="chat in chats"
 				:key="chat.id"
 				:class="selectedChat?.id === chat.id ? 'active' : ''"
-				@click="() => (selectedChat = chat)"
+				@click="() => selectChat(chat)"
 			>
 				<span>{{
 					chat.members.filter((user) => user.username !== auth.username)[0]
@@ -100,7 +163,7 @@ onMounted(() => {
 				<Icon
 					name="material-symbols:delete-rounded"
 					size="1.5em"
-					@click="() => deleteChat(chat.id)"
+					@click="(e: Event) => deleteChat(e, chat.id)"
 				/>
 			</button>
 		</div>
@@ -178,7 +241,7 @@ onMounted(() => {
 		}
 
 		&::backdrop {
-			background-color: #00000066;
+			background-color: #000000aa;
 		}
 	}
 
