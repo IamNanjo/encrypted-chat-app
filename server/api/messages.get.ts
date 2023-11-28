@@ -24,7 +24,7 @@ export default defineEventHandler(async (e) => {
 		return [] as Message[];
 	}
 
-	const messages = await prisma.message.findMany({
+	return prisma.message.findMany({
 		where: {
 			chat: {
 				id: chatId,
@@ -42,6 +42,4 @@ export default defineEventHandler(async (e) => {
 			}
 		}
 	});
-
-	return messages;
 });
