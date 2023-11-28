@@ -1,11 +1,9 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "~/server/db";
 
 export default defineEventHandler(async (e) => {
 	if (!("userId" in e.context.session)) {
 		return await sendRedirect(e, "/login");
 	}
-
-	const prisma = new PrismaClient();
 
 	const profile = await prisma.user.findMany({
 		// where: { id: e.context.session.userId },

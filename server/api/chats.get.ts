@@ -1,11 +1,9 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "~/server/db";
 
 export default defineEventHandler(async (e) => {
 	if (!("userId" in e.context.session)) {
 		return await sendRedirect(e, "/login");
 	}
-
-	const prisma = new PrismaClient();
 
 	return prisma.chat.findMany({
 		where: { members: { some: { id: e.context.session.userId } } },

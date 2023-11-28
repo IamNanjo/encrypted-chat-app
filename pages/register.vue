@@ -1,4 +1,8 @@
 <script setup lang="ts">
+definePageMeta({
+	middleware: ["auth"]
+});
+
 const auth = useAuth();
 const { session, refresh } = await useSession();
 
@@ -13,7 +17,8 @@ onMounted(() => {
 		if (newSession !== null) {
 			auth.value = {
 				authenticated: "username" in newSession,
-				username: newSession.username || ""
+				username: newSession.username || "",
+				currentDevice: null
 			};
 
 			if (auth.value.authenticated) return navigateTo("/");

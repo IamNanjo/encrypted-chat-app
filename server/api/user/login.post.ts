@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "~/server/db";
 import bcrypt from "bcrypt";
 
 export default defineEventHandler(async (e) => {
@@ -18,8 +18,6 @@ export default defineEventHandler(async (e) => {
 
 	const username = body.username.toString();
 	const password = body.password.toString();
-
-	const prisma = new PrismaClient();
 
 	const user = await prisma.user.findUnique({ where: { username } });
 
