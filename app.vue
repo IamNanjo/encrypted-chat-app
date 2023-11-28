@@ -3,46 +3,37 @@ const { session } = await useSession();
 const auth = useAuth();
 const keyPair = useKeyPair();
 
-onMounted(() => {
-	// Check session status on page load and update auth state
-	watch(session, (newSession) => {
-		if (newSession !== null && !auth.value.authenticated) {
-			auth.value = {
-				authenticated: "username" in newSession,
-				username: newSession.username || "",
-				currentDevice: null
-			};
-		} else {
-			return navigateTo("/login");
-		}
-	});
+function generateKeyPair() {
+	return crypto.subtle.generateKey(
+		{
+			name: "RSA-OAEP",
+			modulusLength: 4096,
+			publicExponent: new Uint8Array([1, 0, 1]),
+			hash: "SHA-256"
+		} as RsaHashedKeyGenParams,
+		true,
+		["encrypt", "decrypt"]
+	) as Promise<CryptoKeyPair>;
+}
 
-	// Save / Load saved key pair from localStorage
+function getKeyPairFromLocalStorage(userId: string) {
+	let storedKeyPair = localStorage.getItem(userId);
 
-	let storedKeyPair = {
-		privateKey: localStorage.getItem("privateKey"),
-		publicKey: localStorage.getItem("publicKey")
-	};
-
-	if (!storedKeyPair.privateKey || !storedKeyPair.publicKey) {
-		const newKeys = crypto.subtle.generateKey(
-			{
-				name: "RSA-OAEP",
-				modulusLength: 4096,
-				publicExponent: new Uint8Array([1, 0, 1]),
-				hash: "SHA-256"
-			} as RsaHashedKeyGenParams,
-			true,
-			["encrypt", "decrypt"]
-		) as Promise<CryptoKeyPair>;
+	if (!storedKeyPair) {
+		const newKeys = generateKeyPair();
 
 		newKeys.then(({ privateKey, publicKey }) => {
 			Promise.all([
 				crypto.subtle.exportKey("jwk", privateKey),
 				crypto.subtle.exportKey("jwk", publicKey)
 			]).then(([exportedPrivateKey, exportedPublicKey]) => {
-				localStorage.setItem("privateKey", JSON.stringify(exportedPrivateKey));
-				localStorage.setItem("publicKey", JSON.stringify(exportedPublicKey));
+				localStorage.setItem(
+					userId,
+					JSON.stringify({
+						privateKey: exportedPrivateKey,
+						publicKey: exportedPublicKey
+					})
+				);
 
 				keyPair.value = {
 					privateKey,
@@ -51,18 +42,21 @@ onMounted(() => {
 			});
 		});
 	} else {
+		const keys: { privateKey: JsonWebKey; publicKey: JsonWebKey } =
+			JSON.parse(storedKeyPair);
+
 		// Import private and public key concurrently
 		Promise.all([
 			crypto.subtle.importKey(
 				"jwk",
-				JSON.parse(storedKeyPair.privateKey),
+				keys.privateKey,
 				{ name: "RSA-OAEP", hash: "SHA-256" },
 				true,
 				["decrypt"]
 			),
 			crypto.subtle.importKey(
 				"jwk",
-				JSON.parse(storedKeyPair.publicKey),
+				keys.publicKey,
 				{ name: "RSA-OAEP", hash: "SHA-256" },
 				true,
 				["encrypt"]
@@ -71,18 +65,83 @@ onMounted(() => {
 			keyPair.value = { privateKey, publicKey };
 		});
 	}
+}
+
+function getKeyPairFromIDB(userId: string) {
+	const dbPromise = window.indexedDB.open("chatAppDB", 1);
+
+	dbPromise.onupgradeneeded = (e) => {
+		const db: IDBDatabase = (e.target as any).result;
+
+		const objectStore = db.createObjectStore("keyPairs", {
+			keyPath: "id",
+			autoIncrement: true
+		});
+
+		objectStore.createIndex("userId", "userId", { unique: true });
+	};
+
+	dbPromise.onsuccess = (e) => {
+		const db: IDBDatabase = (e.target as any).result;
+		const transaction = db.transaction(["keyPairs"], "readonly");
+		const objectStore = transaction.objectStore("keyPairs");
+
+		const getRequest = objectStore
+			.index("userId")
+			.get(IDBKeyRange.only(userId));
+
+		getRequest.onsuccess = () => {
+			if (getRequest.result === undefined) {
+				generateKeyPair().then((generatedKeyPair) => {
+					const transaction = db.transaction(["keyPairs"], "readwrite");
+					const objectStore = transaction.objectStore("keyPairs");
+					const addRequest = objectStore.add({
+						userId,
+						keyPair: generatedKeyPair
+					});
+
+					keyPair.value = generatedKeyPair;
+
+					addRequest.onsuccess = () => db.close();
+					addRequest.onerror = () => db.close();
+				});
+			} else if ("keyPair" in getRequest.result) {
+				keyPair.value = getRequest.result.keyPair;
+			}
+		};
+	};
+
+	dbPromise.onerror = (e) => {
+		getKeyPairFromLocalStorage(userId);
+	};
+}
+
+onMounted(() => {
+	// Check session status on page load and update auth state
+	watch(session, (newSession) => {
+		if (newSession === null) return navigateTo("/login");
+
+		auth.value.authenticated = "username" in newSession;
+		auth.value.userId = newSession.userId || "";
+		auth.value.username = newSession.username || "";
+	});
 
 	// Save public key / device into the database
 	watch([auth, keyPair], async ([newAuth, newKeyPair]) => {
-		if (
-			newAuth.authenticated &&
-			newKeyPair &&
-			!newAuth.currentDevice &&
-			localStorage.getItem("publicKey")
-		) {
+		if (newAuth.userId && !newKeyPair) {
+			// Save / Load saved key pair
+			if ("indexedDB" in window) getKeyPairFromIDB(newAuth.userId);
+			else getKeyPairFromLocalStorage(newAuth.userId);
+		}
+
+		if (newAuth.authenticated && newKeyPair && !newAuth.currentDevice) {
 			const device = await useFetch("/api/device", {
 				method: "post",
-				body: { key: localStorage.getItem("publicKey") }
+				body: {
+					key: JSON.stringify(
+						await crypto.subtle.exportKey("jwk", newKeyPair.publicKey)
+					)
+				}
 			});
 
 			if (device.status.value === "success") {
