@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "~/server/db";
 
 export default defineEventHandler(async (e) => {
 	if (!("userId" in e.context.session)) {
@@ -31,8 +31,6 @@ export default defineEventHandler(async (e) => {
 		setResponseStatus(e, 400);
 		return send(e, "No device ID provided");
 	}
-
-	const prisma = new PrismaClient();
 
 	const chat = await prisma.chat.findFirst({
 		where: {

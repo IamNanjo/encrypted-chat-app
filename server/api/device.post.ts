@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "~/server/db";
 
 export default defineEventHandler(async (e) => {
 	if (!("userId" in e.context.session)) {
@@ -14,8 +14,6 @@ export default defineEventHandler(async (e) => {
 	}
 
 	const ua = getHeader(e, "User-Agent") || "Unknown device";
-
-	const prisma = new PrismaClient();
 
 	// Add new device for the user or update the lastUsed date
 	return prisma.device.upsert({

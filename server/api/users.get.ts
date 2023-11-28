@@ -1,11 +1,9 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "~/server/db";
 
 export default defineEventHandler((e) => {
 	if (!("userId" in e.context.session)) {
 		return sendRedirect(e, "/login");
 	}
-
-	const prisma = new PrismaClient();
 
 	const query = getQuery(e) as { q?: string };
 
