@@ -8,7 +8,12 @@ const { remove: removeSession } = await useSession({
 
 async function logOut() {
 	await removeSession();
-	auth.value = { authenticated: false, username: "" };
+	auth.value = {
+		authenticated: false,
+		userId: "",
+		username: "",
+		currentDevice: null
+	};
 	return await navigateTo("/login");
 }
 </script>
