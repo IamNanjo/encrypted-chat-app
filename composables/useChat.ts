@@ -3,7 +3,7 @@ export type Chat = {
 	members: {
 		id: string;
 		username: string;
-		devices: { id: string; key: string }[];
+		devices: { id: string; key: CryptoKey }[];
 	}[];
 };
 
