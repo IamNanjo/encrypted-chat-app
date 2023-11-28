@@ -237,6 +237,7 @@ main {
 	height: 100vh;
 	height: 100svh;
 	padding-top: 3em;
+	overflow-x: hidden;
 }
 
 a {
