@@ -9,6 +9,9 @@ export default defineNuxtConfig({
 			title: "Encrypted Chat App"
 		}
 	},
+	experimental: {
+		restoreState: true
+	},
 	modules: [
 		"@sidebase/nuxt-session",
 		"@nuxtjs/color-mode",
