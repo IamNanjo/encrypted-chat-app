@@ -23,7 +23,7 @@ export default defineEventHandler(async (e) => {
 		return send(e, "You cannot start a chat with yourself");
 	}
 
-	const alreadyExists = await prisma.chat.findFirst({
+	const alreadyExists = await prisma.chat.count({
 		where: {
 			members: {
 				every: {
@@ -44,10 +44,18 @@ export default defineEventHandler(async (e) => {
 				connect: [{ id: e.context.session.userId }, { id: body.user }]
 			}
 		},
-		include: {
+		select: {
+			id: true,
 			members: {
 				select: {
-					id: true
+					id: true,
+					username: true,
+					devices: {
+						select: {
+							id: true,
+							key: true
+						}
+					}
 				}
 			}
 		}
