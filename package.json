@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "nuxt build",
+    "upgrade": "nuxt upgrade -f",
     "dev": "nuxt dev",
     "preview": "nuxt preview --dotenv .env",
     "dbinit": "prisma migrate dev --name init",
@@ -14,7 +15,7 @@
     "@nuxt/devtools": "latest",
     "@nuxtjs/google-fonts": "^3.0.2",
     "@types/bcrypt": "^5.0.1",
-    "nuxt": "^3.8.0",
+    "nuxt": "^3.8.2",
     "prisma": "^5.5.2",
     "vue": "^3.3.7",
     "vue-router": "^4.2.5"
