@@ -8,42 +8,50 @@ const now = ref(0);
 const interval = ref(0);
 const refreshCounter = ref(0);
 
+import type { Message } from "~/server/api/messages.get";
+
 const {
 	data: messages,
 	execute: getMessages,
 	refresh: refreshMessages
 } = await useLazyAsyncData(
-	() =>
-		$fetch("/api/messages", {
+	async (): Promise<Message[]> => {
+		const data = await $fetch("/api/messages", {
 			query: {
 				chatId: chat.value?.id,
 				deviceId: auth.value.currentDevice?.id
-			},
-			onResponse({ response }) {
-				if (response.redirected) {
-					navigateTo("/login");
-					return;
-				}
 			}
-		})
-			.then(async (data) => {
-				for (let i = 0, len = data.length; i < len; i++) {
-					data[i].content = await decryptMessage(data[i].content);
-				}
+		});
 
-				return data;
-			})
-			.catch((err) => {
-				console.error(err);
-				return [];
-			}),
+		for (let i = 0, len = data.length; i < len; i++) {
+			data[i].content = await decryptMessage(data[i].content);
+		}
+
+		return data;
+	},
+
 	{
 		server: false,
-		immediate: false
+		immediate: false,
+		default: (): Message[] => []
 	}
 );
 
-watch(chat, () => getMessages());
+watch(chat, (newChat) => {
+	if (newChat && newChat.id && keyPair.value) getMessages();
+	else if (!newChat) messages.value = [] as Message[];
+});
+
+watch(messages, () => {
+	const scrollContainer = document.getElementById(
+		"chat__messages"
+	) as HTMLDivElement;
+
+	scrollContainer.scrollTo({
+		top: scrollContainer.scrollHeight,
+		behavior: "smooth"
+	});
+});
 
 async function sendMessage() {
 	if (!chat.value || !newMessage.value) return;
@@ -54,21 +62,16 @@ async function sendMessage() {
 	const encoder = new TextEncoder();
 	const decoder = new TextDecoder();
 
-	const currentChat = chat.value;
+	// Encrypt message using each device of each chat member and send it
+	for (let i = 0, iLen = chat.value.members.length; i < iLen; i++) {
+		const member = chat.value.members[i];
 
-	currentChat.members.forEach((member) => {
-		member.devices.forEach(async (device) => {
-			const publicKey = await crypto.subtle.importKey(
-				"jwk",
-				JSON.parse(device.key),
-				{ name: "RSA-OAEP", hash: "SHA-256" },
-				true,
-				["encrypt"]
-			);
+		for (let j = 0, jLen = member.devices.length; j < jLen; j++) {
+			const device = member.devices[j];
 
 			const encryptedMessageBuffer = await crypto.subtle.encrypt(
 				{ name: "RSA-OAEP" },
-				publicKey,
+				device.key,
 				encoder.encode(newMessage.value)
 			);
 
@@ -77,13 +80,13 @@ async function sendMessage() {
 			await useFetch("/api/messages", {
 				method: "post",
 				body: {
-					chat: currentChat.id,
+					chat: chat.value.id,
 					message: encryptedMessage,
 					deviceId: device.id
 				}
 			});
-		});
-	});
+		}
+	}
 
 	await refreshMessages({ dedupe: true });
 
@@ -119,42 +122,43 @@ function getRelativeTime(timestamp: string) {
 	return `${seconds} ${seconds > 1 ? "seconds" : "second"} ago`;
 }
 
-function decryptMessage(content: string) {
+async function decryptMessage(encryptedContent: string) {
 	if (!keyPair.value) {
 		reloadNuxtApp({ force: true });
-		return new Promise<string>((res) => res("Encrypted data"));
+		return encryptedContent;
 	}
 
 	return crypto.subtle
 		.decrypt(
 			{ name: "RSA-OAEP" },
 			keyPair.value.privateKey,
-			new TextEncoder().encode(content)
+			new TextEncoder().encode(encryptedContent)
 		)
 		.then((decryptedMessageBuffer) => {
 			const decryptedMessage = new TextDecoder().decode(decryptedMessageBuffer);
 			return decryptedMessage;
 		})
-		.catch((err) => {
-			return "Encrypted data";
+		.catch(() => {
+			return encryptedContent;
 		});
 }
 
 onMounted(() => {
-	const textField = document.getElementById("chat__textfield");
+	const textField = document.getElementById(
+		"chat__textfield"
+	) as HTMLTextAreaElement;
 
-	if (textField) {
-		textField.onkeydown = (e) => {
-			if (e.key === "Enter" && !e.shiftKey) {
-				e.preventDefault();
-				sendMessage();
-			}
-		};
-	}
+	textField.onkeydown = (e) => {
+		if (e.key === "Enter" && !e.shiftKey) {
+			e.preventDefault();
+			sendMessage();
+		}
+	};
 
 	interval.value = window.setInterval(() => {
 		now.value = Date.now();
-		if (refreshCounter.value % 10 === 0) refreshMessages({ dedupe: true });
+		if (chat.value && keyPair.value && refreshCounter.value % 4 === 0)
+			refreshMessages({ dedupe: true });
 		refreshCounter.value++;
 	}, 500);
 });
