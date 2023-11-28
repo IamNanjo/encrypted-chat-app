@@ -1,8 +1,6 @@
 <script setup lang="ts">
 const auth = useAuth();
-const { session, refresh } = await useSession({
-	fetchSessionOnInitialization: false
-});
+const { session, refresh } = await useSession();
 
 const username = ref("");
 const password = ref("");
