@@ -6,6 +6,14 @@ export default defineEventHandler(async (e) => {
 	}
 
 	const userId = e.context.session.userId;
+
+	const user = await prisma.user.findUnique({ where: { id: userId } });
+	if (!user) {
+		e.context.session = null;
+		setResponseStatus(e, 401);
+		return send(e, "User has been deleted");
+	}
+
 	const body = (await readBody(e)) as { key?: string };
 
 	if (!body || !("key" in body) || !body.key) {
