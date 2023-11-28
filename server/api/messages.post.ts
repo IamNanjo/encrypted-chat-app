@@ -44,15 +44,23 @@ export default defineEventHandler(async (e) => {
 		return send(e, "Chat not found");
 	}
 
-	await prisma.message.create({
+	const message = await prisma.message.create({
 		data: {
 			content: body.message,
 			chatId: body.chat,
 			userId: e.context.session.userId,
 			deviceId: body.deviceId
+		},
+		select: {
+			id: true,
+			content: true,
+			created: true,
+			sender: {
+				select: { username: true }
+			}
 		}
 	});
 
 	setResponseStatus(e, 201);
-	return await send(e);
+	return message;
 });
