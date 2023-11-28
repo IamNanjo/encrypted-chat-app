@@ -1,5 +1,6 @@
 interface User {
 	authenticated: boolean;
+	userId: string;
 	username: string;
 	currentDevice: {
 		id: string;
@@ -12,5 +13,5 @@ interface User {
 
 export default () =>
 	useState<User>(() =>
-		ref({ authenticated: false, username: "", currentDevice: null })
+		ref({ authenticated: false, userId: "", username: "", currentDevice: null })
 	);
