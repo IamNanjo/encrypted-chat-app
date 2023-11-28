@@ -15,6 +15,7 @@ const {
 	execute: getMessages,
 	refresh: refreshMessages
 } = await useLazyAsyncData(
+	"messages",
 	async (): Promise<Message[]> => {
 		const data = await $fetch("/api/messages", {
 			query: {
@@ -23,8 +24,17 @@ const {
 			}
 		});
 
+		const decoder = new TextDecoder();
+
 		for (let i = 0, len = data.length; i < len; i++) {
-			data[i].content = await decryptMessage(data[i].content);
+			const content = atob(data[i].content);
+			const messageAsUint8Array = new Uint8Array(content.length);
+			for (let j = 0, jLen = content.length; j < jLen; j++) {
+				messageAsUint8Array[j] = content.charCodeAt(j);
+			}
+
+			const decryptedBuffer = await decryptMessage(messageAsUint8Array.buffer);
+			data[i].content = decoder.decode(decryptedBuffer);
 		}
 
 		return data;
@@ -37,7 +47,7 @@ const {
 	}
 );
 
-watch(chat, (newChat) => {
+watch(chat, async (newChat) => {
 	if (newChat && newChat.id && keyPair.value) getMessages();
 	else if (!newChat) messages.value = [] as Message[];
 });
@@ -60,7 +70,6 @@ async function sendMessage() {
 		return reloadNuxtApp({ force: true });
 
 	const encoder = new TextEncoder();
-	const decoder = new TextDecoder();
 
 	// Encrypt message using each device of each chat member and send it
 	for (let i = 0, iLen = chat.value.members.length; i < iLen; i++) {
@@ -69,13 +78,10 @@ async function sendMessage() {
 		for (let j = 0, jLen = member.devices.length; j < jLen; j++) {
 			const device = member.devices[j];
 
-			const encryptedMessageBuffer = await crypto.subtle.encrypt(
-				{ name: "RSA-OAEP" },
+			const encryptedMessage = await encryptMessage(
 				device.key,
 				encoder.encode(newMessage.value)
 			);
-
-			const encryptedMessage = decoder.decode(encryptedMessageBuffer);
 
 			await useFetch("/api/messages", {
 				method: "post",
@@ -122,22 +128,29 @@ function getRelativeTime(timestamp: string) {
 	return `${seconds} ${seconds > 1 ? "seconds" : "second"} ago`;
 }
 
-async function decryptMessage(encryptedContent: string) {
+const encryptMessage = async (key: CryptoKey, plaintext: ArrayBuffer) => {
+	const encryptedBuffer = await crypto.subtle.encrypt(
+		{ name: "RSA-OAEP" },
+		key,
+		plaintext
+	);
+
+	const binary = String.fromCharCode.apply(
+		null,
+		Array.from(new Uint8Array(encryptedBuffer))
+	);
+
+	return btoa(binary);
+};
+
+async function decryptMessage(encryptedContent: ArrayBuffer) {
 	if (!keyPair.value) {
 		reloadNuxtApp({ force: true, persistState: true });
 		return encryptedContent;
 	}
 
 	return crypto.subtle
-		.decrypt(
-			{ name: "RSA-OAEP" },
-			keyPair.value.privateKey,
-			new TextEncoder().encode(encryptedContent)
-		)
-		.then((decryptedMessageBuffer) => {
-			const decryptedMessage = new TextDecoder().decode(decryptedMessageBuffer);
-			return decryptedMessage;
-		})
+		.decrypt({ name: "RSA-OAEP" }, keyPair.value.privateKey, encryptedContent)
 		.catch(() => {
 			return encryptedContent;
 		});
@@ -157,8 +170,9 @@ onMounted(() => {
 
 	interval.value = window.setInterval(() => {
 		now.value = Date.now();
-		if (chat.value && keyPair.value && refreshCounter.value % 4 === 0)
+		if (chat.value && keyPair.value && refreshCounter.value % 4 === 0) {
 			refreshMessages({ dedupe: true });
+		}
 		refreshCounter.value++;
 	}, 500);
 });
