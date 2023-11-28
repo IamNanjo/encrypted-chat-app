@@ -1,6 +1,5 @@
 export default defineNuxtRouteMiddleware(async (to) => {
 	if (process.client) return;
-	console.log(to.path);
 
 	const { session } = await useSession();
 	const authPages = ["/login", "/register"];
