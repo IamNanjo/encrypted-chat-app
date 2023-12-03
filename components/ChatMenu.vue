@@ -60,7 +60,7 @@ async function parseChat(rawChat: RawChat): Promise<Chat> {
 			const parsedKey = await crypto.subtle.importKey(
 				"jwk",
 				JSON.parse(device.key),
-				{ name: "RSA-OAEP", hash: "SHA-256" },
+				{ name: "RSA-OAEP", hash: "SHA-512" },
 				true,
 				["encrypt"]
 			);

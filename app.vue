@@ -9,7 +9,7 @@ function generateKeyPair() {
 			name: "RSA-OAEP",
 			modulusLength: 4096,
 			publicExponent: new Uint8Array([1, 0, 1]),
-			hash: "SHA-256"
+			hash: "SHA-512"
 		} as RsaHashedKeyGenParams,
 		true,
 		["encrypt", "decrypt"]
@@ -50,14 +50,14 @@ function getKeyPairFromLocalStorage(userId: string) {
 			crypto.subtle.importKey(
 				"jwk",
 				keys.privateKey,
-				{ name: "RSA-OAEP", hash: "SHA-256" },
+				{ name: "RSA-OAEP", hash: "SHA-512" },
 				true,
 				["decrypt"]
 			),
 			crypto.subtle.importKey(
 				"jwk",
 				keys.publicKey,
-				{ name: "RSA-OAEP", hash: "SHA-256" },
+				{ name: "RSA-OAEP", hash: "SHA-512" },
 				true,
 				["encrypt"]
 			)

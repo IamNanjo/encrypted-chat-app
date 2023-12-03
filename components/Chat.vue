@@ -52,17 +52,6 @@ watch(chat, async (newChat) => {
 	else if (!newChat) messages.value = [] as Message[];
 });
 
-watch(messages, () => {
-	const scrollContainer = document.getElementById(
-		"chat__messages"
-	) as HTMLDivElement;
-
-	scrollContainer.scrollTo({
-		top: scrollContainer.scrollHeight,
-		behavior: "smooth"
-	});
-});
-
 async function sendMessage() {
 	if (!chat.value || !newMessage.value) return;
 
