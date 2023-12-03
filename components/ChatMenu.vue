@@ -18,7 +18,6 @@ interface RawChat {
 
 const {
 	data: chats,
-	pending,
 	execute: getChats,
 	refresh: refreshChats
 } = await useLazyAsyncData(
@@ -122,6 +121,7 @@ onMounted(() => {
 
 	interval.value = window.setInterval(() => {
 		refreshChats({ dedupe: true });
+		refreshNuxtData("updateDevice");
 	}, 5000);
 });
 
