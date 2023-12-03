@@ -120,7 +120,7 @@ onMounted(() => {
 						<thead>
 							<tr>
 								<th>Name</th>
-								<th>Last login</th>
+								<th>Last used</th>
 								<th></th>
 							</tr>
 						</thead>
