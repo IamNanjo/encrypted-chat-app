@@ -3,10 +3,22 @@ defineProps<{ text: string }>();
 </script>
 
 <template>
-	<div class="alert">{{ text }}</div>
+	<Transition>
+		<div v-if="text.length" class="alert">{{ text }}</div>
+	</Transition>
 </template>
 
 <style lang="scss">
+.v-enter-active,
+.v-leave-active {
+	transition: opacity 0.5s ease;
+}
+
+.v-enter-from,
+.v-leave-to {
+	opacity: 0;
+}
+
 .alert {
 	background-color: hsl(3, 100%, 60%);
 	padding: 1em;
