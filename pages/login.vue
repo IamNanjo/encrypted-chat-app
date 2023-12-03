@@ -27,7 +27,7 @@ async function handleSubmit() {
 		return (error.value = "You need to fill all the fields");
 	}
 
-	await useFetch("/api/user/login", {
+	await useFetch("/api/login", {
 		method: "POST",
 		body: {
 			username: username.value,

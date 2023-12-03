@@ -32,7 +32,7 @@ async function handleSubmit() {
 		return (error.value = "The passwords do not match");
 	}
 
-	await useFetch("/api/user/create", {
+	await useFetch("/api/user", {
 		method: "POST",
 		body: {
 			username: username.value,
