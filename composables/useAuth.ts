@@ -1,4 +1,4 @@
-interface User {
+export interface User {
 	authenticated: boolean;
 	userId: string;
 	username: string;
