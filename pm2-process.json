@@ -2,6 +2,7 @@
 	"apps": [
 		{
 			"name": "chat",
+			"interpreter": "~/.bun/bin/bun",
 			"script": ".output/server/index.mjs",
 			"exec_mode": "cluster",
 			"instances": "max",
