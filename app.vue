@@ -116,44 +116,53 @@ function getKeyPairFromIDB(userId: string) {
 	};
 }
 
+async function updateDevice(
+	authenticated: boolean,
+	keyPair: CryptoKeyPair | null
+) {
+	if (authenticated && keyPair) {
+		const device = await useFetch("/api/device", {
+			method: "post",
+			body: {
+				key: JSON.stringify(
+					await crypto.subtle.exportKey("jwk", keyPair.publicKey)
+				)
+			}
+		});
+
+		if (device.status.value === "success") {
+			auth.value.currentDevice = device.data.value;
+		}
+	}
+}
+
+// Check session status and update auth state
+watch(session, (newSession) => {
+	if (newSession === null || !("userId" in newSession))
+		return navigateTo("/login");
+
+	auth.value.authenticated = "username" in newSession;
+	auth.value.userId = newSession.userId || "";
+	auth.value.username = newSession.username || "";
+});
+
 onMounted(() => {
-	// Check session status on page load and update auth state
-	watch(session, (newSession) => {
-		if (newSession === null) return navigateTo("/login");
-
-		auth.value.authenticated = "username" in newSession;
-		auth.value.userId = newSession.userId || "";
-		auth.value.username = newSession.username || "";
-	});
-
 	// Save public key / device into the database
-	watch([auth, keyPair], async ([newAuth, newKeyPair]) => {
+	watch([auth, keyPair], ([newAuth, newKeyPair]) => {
 		if (newAuth.userId && !newKeyPair) {
 			// Save / Load saved key pair
 			if ("indexedDB" in window) getKeyPairFromIDB(newAuth.userId);
 			else getKeyPairFromLocalStorage(newAuth.userId);
 		}
 
-		if (newAuth.authenticated && newKeyPair && !newAuth.currentDevice) {
-			const device = await useFetch("/api/device", {
-				method: "post",
-				body: {
-					key: JSON.stringify(
-						await crypto.subtle.exportKey("jwk", newKeyPair.publicKey)
-					)
-				}
-			});
-
-			if (device.status.value === "success") {
-				auth.value.currentDevice = device.data.value;
-			}
-		}
+		updateDevice(newAuth.authenticated, newKeyPair);
 	});
 });
 </script>
 
 <template>
 	<NavBar />
+	<NuxtLoadingIndicator />
 	<NuxtPage />
 </template>
 
