@@ -15,6 +15,7 @@
     "@nuxt/devtools": "latest",
     "@nuxtjs/google-fonts": "^3.0.2",
     "@types/bcrypt": "^5.0.1",
+    "@types/ua-parser-js": "^0.7.39",
     "nuxt": "^3.8.2",
     "prisma": "^5.5.2",
     "vue": "^3.3.7",
@@ -28,6 +29,7 @@
     "bcrypt": "^5.1.1",
     "hookable": "^5.5.3",
     "nuxt-icon": "^0.6.1",
-    "sass": "^1.69.5"
+    "sass": "^1.69.5",
+    "ua-parser-js": "^1.0.37"
   }
 }
