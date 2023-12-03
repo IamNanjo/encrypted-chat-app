@@ -33,7 +33,7 @@ export default defineEventHandler(async (e) => {
 	return prisma.device.upsert({
 		where: { key: body.key },
 		create: {
-			name: `${device.browser.name} - ${device.os.name}`,
+			name: `${device.browser.name} ${device.os.name}`,
 			key: body.key,
 			user: { connect: { id: userId } }
 		},
