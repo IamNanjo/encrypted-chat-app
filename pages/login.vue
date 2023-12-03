@@ -5,6 +5,7 @@ const { session, refresh } = await useSession();
 const username = ref("");
 const password = ref("");
 const error = ref("");
+const errorTimeout = ref(0);
 
 onMounted(() => {
 	// Check session status on page load and update auth state
@@ -45,6 +46,20 @@ async function handleSubmit() {
 		}
 	});
 }
+
+onMounted(() => {
+	watch(error, (newError) => {
+		if (errorTimeout.value) {
+			clearTimeout(errorTimeout.value);
+			errorTimeout.value = 0;
+		}
+		if (newError) {
+			errorTimeout.value = window.setTimeout(() => {
+				error.value = "";
+			}, 5000);
+		}
+	});
+});
 </script>
 
 <template>
@@ -75,12 +90,12 @@ async function handleSubmit() {
 				/>
 			</div>
 			<button type="submit">Log In</button>
-			<Alert v-if="error.length" :text="error"></Alert>
+			<Alert :text="error"></Alert>
 		</form>
 	</main>
 </template>
 
-<style lang="scss">
+<style scoped lang="scss">
 .auth-form {
 	display: flex;
 	flex-direction: column;
@@ -93,7 +108,7 @@ async function handleSubmit() {
 	font-size: 1.125em;
 
 	> h1 {
-		font-size: 2em;
+		font-size: 1.75em;
 		text-align: center;
 	}
 
