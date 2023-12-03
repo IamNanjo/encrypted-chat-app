@@ -1,7 +1,16 @@
 <script setup lang="ts">
+import type { User } from "./composables/useAuth";
+
 const { session } = await useSession();
 const auth = useAuth();
 const keyPair = useKeyPair();
+
+// Allow updating the device (last used time) from anywhere using refreshNuxtData
+const _ = await useLazyAsyncData(
+	"updateDevice",
+	() => updateDevice(auth.value, keyPair.value),
+	{ server: false, watch: [auth, keyPair] }
+);
 
 function generateKeyPair() {
 	return crypto.subtle.generateKey(
@@ -107,6 +116,7 @@ function getKeyPairFromIDB(userId: string) {
 				});
 			} else if ("keyPair" in getRequest.result) {
 				keyPair.value = getRequest.result.keyPair;
+				updateDevice();
 			}
 		};
 	};
@@ -116,16 +126,13 @@ function getKeyPairFromIDB(userId: string) {
 	};
 }
 
-async function updateDevice(
-	authenticated: boolean,
-	keyPair: CryptoKeyPair | null
-) {
-	if (authenticated && keyPair) {
+async function updateDevice() {
+	if (auth.value.authenticated && keyPair.value) {
 		const device = await useFetch("/api/device", {
 			method: "post",
 			body: {
 				key: JSON.stringify(
-					await crypto.subtle.exportKey("jwk", keyPair.publicKey)
+					await crypto.subtle.exportKey("jwk", keyPair.value.publicKey)
 				)
 			}
 		});
@@ -133,6 +140,14 @@ async function updateDevice(
 		if (device.status.value === "success") {
 			auth.value.currentDevice = device.data.value;
 		}
+
+		return device.data.value;
+	} else if (!auth.value.authenticated && !keyPair.value) {
+		return;
+	} else if (!keyPair.value && "indexedDB" in window) {
+		getKeyPairFromIDB(auth.value.userId);
+	} else {
+		getKeyPairFromLocalStorage(auth.value.userId);
 	}
 }
 
@@ -148,14 +163,12 @@ watch(session, (newSession) => {
 
 onMounted(() => {
 	// Save public key / device into the database
-	watch([auth, keyPair], ([newAuth, newKeyPair]) => {
-		if (newAuth.userId && !newKeyPair) {
+	watch(auth, (newAuth) => {
+		if (newAuth.userId && !keyPair.value) {
 			// Save / Load saved key pair
 			if ("indexedDB" in window) getKeyPairFromIDB(newAuth.userId);
 			else getKeyPairFromLocalStorage(newAuth.userId);
 		}
-
-		updateDevice(newAuth.authenticated, newKeyPair);
 	});
 });
 </script>
