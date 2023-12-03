@@ -1,6 +1,6 @@
 <script setup lang="ts">
 const auth = useAuth();
-const { data: profile, pending } = await useLazyFetch("/api/user/profile");
+const { data: profile, pending } = await useLazyFetch("/api/profile");
 
 onMounted(() => {
 	watch(auth, (newAuth) => {
