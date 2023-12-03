@@ -5,8 +5,8 @@ export default defineEventHandler(async (e) => {
 		return await sendRedirect(e, "/login");
 	}
 
-	const profile = await prisma.user.findMany({
-		// where: { id: e.context.session.userId },
+	return prisma.user.findUnique({
+		where: { id: e.context.session.userId },
 		select: {
 			id: true,
 			username: true,
@@ -20,6 +20,4 @@ export default defineEventHandler(async (e) => {
 			}
 		}
 	});
-
-	return profile;
 });
