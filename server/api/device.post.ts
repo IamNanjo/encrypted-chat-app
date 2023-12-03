@@ -1,4 +1,5 @@
 import { prisma } from "~/server/db";
+import { UAParser } from "ua-parser-js";
 
 export default defineEventHandler(async (e) => {
 	if (!("userId" in e.context.session)) {
@@ -21,7 +22,8 @@ export default defineEventHandler(async (e) => {
 		return await send(e, "Public key missing from the request");
 	}
 
-	const ua = getHeader(e, "User-Agent") || "Unknown device";
+	// Get device information for the device name
+	const device = new UAParser(getHeader(e, "User-Agent")).getResult();
 
 	// Delete devices that have not been used in 7 days
 	const oneWeekAgo = new Date(Date.now() - 604800000);
@@ -30,7 +32,11 @@ export default defineEventHandler(async (e) => {
 	// Add new device for the user or update the lastUsed date
 	return prisma.device.upsert({
 		where: { key: body.key },
-		create: { name: ua, key: body.key, user: { connect: { id: userId } } },
+		create: {
+			name: `${device.browser.name} - ${device.os.name}`,
+			key: body.key,
+			user: { connect: { id: userId } }
+		},
 		update: { lastUsed: new Date() }
 	});
 });
