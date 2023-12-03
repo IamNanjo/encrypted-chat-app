@@ -22,7 +22,7 @@ async function logOut() {
 	<nav>
 		<div>
 			<ChatMenuToggle v-if="route.path === '/'" tabindex="0" />
-			<NuxtLink v-else to="/" tabindex="0" title="Back to app"
+			<NuxtLink v-else-if="auth.authenticated" to="/" tabindex="0" title="Back to app"
 				><Icon name="material-symbols:arrow-back-rounded" size="2em"
 			/></NuxtLink>
 		</div>
