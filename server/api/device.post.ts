@@ -29,14 +29,20 @@ export default defineEventHandler(async (e) => {
 	const oneWeekAgo = new Date(Date.now() - 604800000);
 	await prisma.device.deleteMany({ where: { lastUsed: { lte: oneWeekAgo } } });
 
-	// Add new device for the user or update the lastUsed date
-	return prisma.device.upsert({
-		where: { key: body.key },
-		create: {
-			name: `${device.browser.name} ${device.os.name}`,
-			key: body.key,
-			user: { connect: { id: userId } }
-		},
-		update: { lastUsed: new Date() }
-	});
+	const deviceExists = await prisma.device.count({ where: { key: body.key } });
+
+	if (deviceExists) {
+		return prisma.device.update({
+			where: { key: body.key },
+			data: { lastUsed: new Date() }
+		});
+	} else {
+		return prisma.device.create({
+			data: {
+				name: `${device.browser.name} ${device.os.name}`,
+				key: body.key,
+				user: { connect: { id: userId } }
+			}
+		});
+	}
 });
