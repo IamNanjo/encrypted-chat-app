@@ -5,10 +5,12 @@ const { session } = await useSession();
 const auth = useAuth();
 const keyPair = useKeyPair();
 
+const interval = ref(0);
+
 // Allow updating the device (last used time) from anywhere using refreshNuxtData
-const _ = await useLazyAsyncData(
+const {refresh: refreshDevice} = await useLazyAsyncData(
 	"updateDevice",
-	() => updateDevice(auth.value, keyPair.value),
+	() => updateDevice(),
 	{ server: false, watch: [auth, keyPair] }
 );
 
@@ -170,7 +172,13 @@ onMounted(() => {
 			else getKeyPairFromLocalStorage(newAuth.userId);
 		}
 	});
+
+	interval.value = window.setInterval(() => {
+		refreshDevice();
+	}, 5000);
 });
+
+onUnmounted(() => clearInterval(interval.value))
 </script>
 
 <template>

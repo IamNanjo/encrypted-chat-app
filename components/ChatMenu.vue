@@ -121,7 +121,6 @@ onMounted(() => {
 
 	interval.value = window.setInterval(() => {
 		refreshChats({ dedupe: true });
-		refreshNuxtData("updateDevice");
 	}, 5000);
 });
 
