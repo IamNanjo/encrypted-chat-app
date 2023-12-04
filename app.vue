@@ -11,7 +11,7 @@ const interval = ref(0);
 const {refresh: refreshDevice} = await useLazyAsyncData(
 	"updateDevice",
 	() => updateDevice(),
-	{ server: false, watch: [auth, keyPair] }
+	{ server: false, immediate: false, watch: [auth, keyPair] }
 );
 
 function generateKeyPair() {
