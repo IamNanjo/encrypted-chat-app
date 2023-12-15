@@ -113,7 +113,7 @@ onMounted(() => {
 				<Alert :text="error"></Alert>
 			</form>
 
-			<div v-if="profile?.devices.length" class="devices">
+			<div v-if="profile?.devices?.length" class="devices">
 				<h2>Your Devices</h2>
 				<div class="devices__table-container">
 					<table class="devices__table">
