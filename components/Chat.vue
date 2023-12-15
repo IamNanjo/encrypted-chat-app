@@ -16,30 +16,33 @@ const {
 	refresh: refreshMessages
 } = await useLazyAsyncData(
 	"messages",
-	async (): Promise<Message[]> => {
-		const data = await $fetch("/api/messages", {
+	(): Promise<Message[]> =>
+		$fetch("/api/messages", {
 			query: {
 				chatId: chat.value?.id,
 				deviceId: auth.value.currentDevice?.id
 			}
-		});
+		})
+			.then(async (res) => {
+				const decoder = new TextDecoder();
 
-		const decoder = new TextDecoder();
+				for (let i = 0, len = res.length; i < len; i++) {
+					const content = atob(res[i].content);
+					const messageAsUint8Array = new Uint8Array(content.length);
 
-		for (let i = 0, len = data.length; i < len; i++) {
-			const content = atob(data[i].content);
-			const messageAsUint8Array = new Uint8Array(content.length);
-			for (let j = 0, jLen = content.length; j < jLen; j++) {
-				messageAsUint8Array[j] = content.charCodeAt(j);
-			}
+					for (let j = 0, jLen = content.length; j < jLen; j++) {
+						messageAsUint8Array[j] = content.charCodeAt(j);
+					}
 
-			const decryptedBuffer = await decryptMessage(messageAsUint8Array.buffer);
-			data[i].content = decoder.decode(decryptedBuffer);
-		}
+					const decryptedBuffer = await decryptMessage(
+						messageAsUint8Array.buffer
+					);
+					res[i].content = decoder.decode(decryptedBuffer);
+				}
 
-		return data;
-	},
-
+				return res;
+			})
+			.catch(() => []),
 	{
 		server: false,
 		immediate: false,
@@ -72,8 +75,8 @@ async function sendMessage() {
 				encoder.encode(newMessage.value)
 			);
 
-			await useFetch("/api/messages", {
-				method: "post",
+			await $fetch("/api/messages", {
+				method: "POST",
 				body: {
 					chat: chat.value.id,
 					message: encryptedMessage,
@@ -215,7 +218,7 @@ onBeforeUnmount(() => {
 	flex-direction: column;
 	gap: 1em;
 	background-color: var(--bg-primary);
-	justify-content: center;
+	justify-content: space-between;
 	padding: 1em;
 
 	--border-radius: 6px;
@@ -226,7 +229,6 @@ onBeforeUnmount(() => {
 		flex-direction: column;
 		gap: 1em;
 		width: 100%;
-		height: 100%;
 		padding-right: 0.5em;
 		overflow-x: hidden;
 		text-overflow: ellipsis;
@@ -257,6 +259,7 @@ onBeforeUnmount(() => {
 
 	&__new-message {
 		display: flex;
+		width: 100%;
 		height: max-content;
 	}
 

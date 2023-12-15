@@ -28,23 +28,17 @@ async function handleSubmit() {
 		return (error.value = "You need to fill all the fields");
 	}
 
-	await useFetch("/api/login", {
+	await $fetch("/api/login", {
 		method: "POST",
 		body: {
 			username: username.value,
 			password: password.value
-		},
-		async onRequestError() {
-			error.value = "Request failed";
-		},
-		async onResponse({ response }) {
-			if (response.ok) return await refresh();
-			error.value = response._data || response.statusText;
-		},
-		async onResponseError({ response }) {
-			error.value = response._data || response.statusText;
 		}
-	});
+	})
+		.then(() => refresh())
+		.catch((err) => {
+			error.value = err.data;
+		});
 }
 
 onMounted(() => {
@@ -115,9 +109,11 @@ onMounted(() => {
 	> a,
 	> .or {
 		color: var(--text-muted);
-		margin-top: -1em;
-		text-align: center;
+		width: max-content;
+		margin-inline: auto;
+		margin-top: -1.25em;
 		font-size: 1.25em;
+		user-select: none;
 	}
 
 	button[type="submit"] {
