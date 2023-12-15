@@ -1,6 +1,9 @@
 <script setup lang="ts">
+const session = await useSession({ fetchSessionOnInitialization: false });
 const auth = useAuth();
-const { data: profile, refresh } = await useLazyFetch("/api/profile");
+const { data: profile, refresh } = await useLazyFetch("/api/profile", {
+	watch: [auth]
+});
 
 const currentPassword = ref("");
 const newPassword = ref("");
@@ -8,43 +11,48 @@ const error = ref("");
 const errorTimeout = ref(0);
 
 async function handleSubmit() {
-	const {
-		data,
-		error: err,
-		status
-	} = await useFetch("/api/profile", {
+	$fetch("/api/profile", {
 		method: "PUT",
 		body: {
 			username: profile.value?.username,
 			currentPassword: currentPassword.value,
 			newPassword: newPassword.value
 		}
-	});
-
-	if (status.value === "error" && err.value) error.value = err.value.data;
-	else {
-		currentPassword.value = "";
-		newPassword.value = "";
-		await refresh();
-	}
+	})
+		.then(() => {
+			currentPassword.value = "";
+			newPassword.value = "";
+			refresh();
+		})
+		.catch((err) => {
+			err.value = err.data;
+		});
 }
 
 async function deleteUser() {
-	const { status } = await useFetch("/api/user", { method: "DELETE" });
-
-	if (status.value === "success") {
-		return navigateTo("/login");
-	}
+	$fetch("/api/user", { method: "DELETE" }).then(async () => {
+		await session.remove();
+		auth.value = {
+			authenticated: false,
+			userId: "",
+			username: "",
+			currentDevice: null
+		};
+		return await navigateTo("/login");
+	});
 }
 
 async function deleteDevice(deviceId: string) {
-	const { status, error: err } = await useFetch("/api/device", {
+	$fetch("/api/device", {
 		method: "DELETE",
 		body: { deviceId }
-	});
-
-	if (status.value === "success") await refresh();
-	else if (err.value) error.value = err.value.data;
+	})
+		.then(() => {
+			refresh();
+		})
+		.catch((err) => {
+			err.value = err.data;
+		});
 }
 
 onMounted(() => {
@@ -146,6 +154,9 @@ onMounted(() => {
 </template>
 
 <style scoped lang="scss">
+main {
+	padding-block: 2em;
+}
 main > div {
 	display: flex;
 	flex-wrap: wrap;

@@ -87,16 +87,18 @@ function showUserSelect() {
 }
 
 async function newChat(user: string) {
-	const chat = await useFetch("/api/chats", {
-		method: "post",
+	$fetch("/api/chats", {
+		method: "POST",
 		body: { user }
-	});
-
-	await refreshChats({ dedupe: true });
-	isOpen.value = false;
-	if (chat.status.value === "success" && chat.data.value !== null) {
-		selectChat(await parseChat(chat.data.value));
-	}
+	})
+		.then(async (res) => {
+			await refreshChats({ dedupe: true });
+			isOpen.value = false;
+			if (res !== null) {
+				selectChat(await parseChat(res));
+			}
+		})
+		.catch(console.error);
 }
 
 function selectChat(chat: Chat) {
@@ -111,7 +113,7 @@ async function deleteChat(e: Event, id: string) {
 		selectedChat.value = null;
 	}
 
-	await useFetch("/api/chats", { method: "delete", body: { id } });
+	await $fetch("/api/chats", { method: "delete", body: { id } });
 	await refreshChats({ dedupe: true });
 }
 
@@ -120,7 +122,9 @@ onMounted(() => {
 	getChats();
 
 	interval.value = window.setInterval(() => {
-		refreshChats({ dedupe: true });
+		if (auth.value.currentDevice) {
+			refreshChats({ dedupe: true });
+		}
 	}, 5000);
 });
 
