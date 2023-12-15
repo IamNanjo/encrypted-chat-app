@@ -31,7 +31,8 @@ onMounted(() => {
 
 .chat-menu,
 .chat {
-	height: 100%;
+	height: calc(100vh - 3em);
+	height: calc(100svh - 3em);
 }
 
 .chat {
