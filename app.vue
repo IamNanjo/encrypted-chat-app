@@ -175,7 +175,7 @@ onMounted(() => {
 
 	interval.value = window.setInterval(() => {
 		refreshDevice();
-	}, 5000);
+	}, 10000);
 });
 
 onUnmounted(() => clearInterval(interval.value))
