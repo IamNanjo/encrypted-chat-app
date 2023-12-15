@@ -1,18 +1,7 @@
 <script setup lang="ts">
-import type { User } from "./composables/useAuth";
-
 const { session } = await useSession();
 const auth = useAuth();
 const keyPair = useKeyPair();
-
-const interval = ref(0);
-
-// Allow updating the device (last used time) from anywhere using refreshNuxtData
-const {refresh: refreshDevice} = await useLazyAsyncData(
-	"updateDevice",
-	() => updateDevice(),
-	{ server: false, immediate: false, watch: [auth, keyPair] }
-);
 
 function generateKeyPair() {
 	return crypto.subtle.generateKey(
@@ -118,8 +107,9 @@ function getKeyPairFromIDB(userId: string) {
 				});
 			} else if ("keyPair" in getRequest.result) {
 				keyPair.value = getRequest.result.keyPair;
-				updateDevice();
 			}
+
+			updateDevice();
 		};
 	};
 
@@ -131,7 +121,7 @@ function getKeyPairFromIDB(userId: string) {
 async function updateDevice() {
 	if (auth.value.authenticated && keyPair.value) {
 		const device = await useFetch("/api/device", {
-			method: "post",
+			method: "POST",
 			body: {
 				key: JSON.stringify(
 					await crypto.subtle.exportKey("jwk", keyPair.value.publicKey)
@@ -143,47 +133,39 @@ async function updateDevice() {
 			auth.value.currentDevice = device.data.value;
 		}
 
-		return device.data.value;
+		setTimeout(() => updateDevice, 5000);
 	} else if (!auth.value.authenticated && !keyPair.value) {
 		return;
-	} else if (!keyPair.value && "indexedDB" in window) {
+	} else if ("indexedDB" in window) {
 		getKeyPairFromIDB(auth.value.userId);
 	} else {
 		getKeyPairFromLocalStorage(auth.value.userId);
 	}
 }
 
-// Check session status and update auth state
-watch(session, (newSession) => {
-	if (newSession === null || !("userId" in newSession))
-		return navigateTo("/login");
-
-	auth.value.authenticated = "username" in newSession;
-	auth.value.userId = newSession.userId || "";
-	auth.value.username = newSession.username || "";
-});
-
 onMounted(() => {
-	// Save public key / device into the database
+	// Check session status and update auth state
+	watch(session, (newSession) => {
+		if (newSession === null || !("userId" in newSession))
+			return navigateTo("/login");
+
+		auth.value.authenticated = "username" in newSession;
+		auth.value.userId = newSession.userId || "";
+		auth.value.username = newSession.username || "";
+	});
+
+	// Save / Load saved key pair
 	watch(auth, (newAuth) => {
 		if (newAuth.userId && !keyPair.value) {
-			// Save / Load saved key pair
 			if ("indexedDB" in window) getKeyPairFromIDB(newAuth.userId);
 			else getKeyPairFromLocalStorage(newAuth.userId);
 		}
 	});
-
-	interval.value = window.setInterval(() => {
-		refreshDevice();
-	}, 10000);
 });
-
-onUnmounted(() => clearInterval(interval.value))
 </script>
 
 <template>
 	<NavBar />
-	<NuxtLoadingIndicator />
 	<NuxtPage />
 </template>
 
