@@ -3,6 +3,8 @@ const { session } = await useSession();
 const auth = useAuth();
 const keyPair = useKeyPair();
 
+const gotKeyPair = ref(false);
+
 function generateKeyPair() {
 	return crypto.subtle.generateKey(
 		{
@@ -16,8 +18,8 @@ function generateKeyPair() {
 	) as Promise<CryptoKeyPair>;
 }
 
-function getKeyPairFromLocalStorage(userId: string) {
-	let storedKeyPair = localStorage.getItem(userId);
+function getKeyPairFromLocalStorage() {
+	let storedKeyPair = localStorage.getItem(auth.value.userId);
 
 	if (!storedKeyPair) {
 		const newKeys = generateKeyPair();
@@ -28,7 +30,7 @@ function getKeyPairFromLocalStorage(userId: string) {
 				crypto.subtle.exportKey("jwk", publicKey)
 			]).then(([exportedPrivateKey, exportedPublicKey]) => {
 				localStorage.setItem(
-					userId,
+					auth.value.userId,
 					JSON.stringify({
 						privateKey: exportedPrivateKey,
 						publicKey: exportedPublicKey
@@ -67,7 +69,7 @@ function getKeyPairFromLocalStorage(userId: string) {
 	}
 }
 
-function getKeyPairFromIDB(userId: string) {
+function getKeyPairFromIDB() {
 	const dbPromise = window.indexedDB.open("chatAppDB", 1);
 
 	dbPromise.onupgradeneeded = (e) => {
@@ -88,7 +90,7 @@ function getKeyPairFromIDB(userId: string) {
 
 		const getRequest = objectStore
 			.index("userId")
-			.get(IDBKeyRange.only(userId));
+			.get(IDBKeyRange.only(auth.value.userId));
 
 		getRequest.onsuccess = () => {
 			if (getRequest.result === undefined) {
@@ -96,7 +98,7 @@ function getKeyPairFromIDB(userId: string) {
 					const transaction = db.transaction(["keyPairs"], "readwrite");
 					const objectStore = transaction.objectStore("keyPairs");
 					const addRequest = objectStore.add({
-						userId,
+						userId: auth.value.userId,
 						keyPair: generatedKeyPair
 					});
 
@@ -108,57 +110,61 @@ function getKeyPairFromIDB(userId: string) {
 			} else if ("keyPair" in getRequest.result) {
 				keyPair.value = getRequest.result.keyPair;
 			}
-
-			updateDevice();
 		};
 	};
 
 	dbPromise.onerror = (e) => {
-		getKeyPairFromLocalStorage(userId);
+		getKeyPairFromLocalStorage();
 	};
 }
 
 async function updateDevice() {
 	if (auth.value.authenticated && keyPair.value) {
-		const device = await useFetch("/api/device", {
+		$fetch("/api/device", {
 			method: "POST",
 			body: {
 				key: JSON.stringify(
 					await crypto.subtle.exportKey("jwk", keyPair.value.publicKey)
 				)
-			}
-		});
-
-		if (device.status.value === "success") {
-			auth.value.currentDevice = device.data.value;
-		}
-
-		setTimeout(() => updateDevice, 5000);
-	} else if (!auth.value.authenticated && !keyPair.value) {
-		return;
-	} else if ("indexedDB" in window) {
-		getKeyPairFromIDB(auth.value.userId);
-	} else {
-		getKeyPairFromLocalStorage(auth.value.userId);
+			},
+			retry: false
+		})
+			.then((res) => {
+				if (res) {
+					auth.value.currentDevice = res;
+				}
+			})
+			.catch(console.error);
 	}
+
+	setTimeout(updateDevice, 5000);
 }
 
 onMounted(() => {
 	// Check session status and update auth state
-	watch(session, (newSession) => {
+	const unwatchSession = watch(session, (newSession) => {
 		if (newSession === null || !("userId" in newSession))
 			return navigateTo("/login");
 
 		auth.value.authenticated = "username" in newSession;
 		auth.value.userId = newSession.userId || "";
 		auth.value.username = newSession.username || "";
+
+		unwatchSession();
 	});
 
-	// Save / Load saved key pair
-	watch(auth, (newAuth) => {
-		if (newAuth.userId && !keyPair.value) {
-			if ("indexedDB" in window) getKeyPairFromIDB(newAuth.userId);
-			else getKeyPairFromLocalStorage(newAuth.userId);
+	const unwatchAuth = watch(auth, (newAuth) => {
+		if (!newAuth.authenticated) return;
+		if (gotKeyPair.value) unwatchAuth();
+
+		if ("indexedDB" in window) getKeyPairFromIDB();
+		else getKeyPairFromLocalStorage();
+	});
+
+	const unwatchKeyPair = watch(keyPair, (newKeyPair) => {
+		if (newKeyPair) {
+			updateDevice();
+			unwatchKeyPair();
 		}
 	});
 });
@@ -229,6 +235,14 @@ onMounted(() => {
 	filter: drop-shadow(1px 1px 1px black);
 }
 
+#__nuxt {
+	display: contents;
+}
+
+html, body {
+	height: 100%;
+}
+
 body {
 	position: relative;
 	background-color: var(--bg-primary);
@@ -246,9 +260,8 @@ main {
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	height: 100vh;
-	height: 100svh;
-	padding-top: 3em;
+	min-height: calc(100vh - 3em);
+	min-height: calc(100svh - 3em);
 	overflow-x: hidden;
 }
 
@@ -273,6 +286,7 @@ button {
 }
 
 :disabled {
+	user-select: none;
 	cursor: not-allowed;
 }
 
