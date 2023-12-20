@@ -1,6 +1,8 @@
 <script setup lang="ts">
-const { session, remove: removeSession } = await useSession();
-const { $socket } = useNuxtApp();
+const { remove: removeSession } = await useSession({
+	fetchSessionOnInitialization: false
+});
+const socket = useSocket();
 const auth = useAuth();
 const keyPair = useKeyPair();
 
@@ -142,18 +144,6 @@ async function updateDevice() {
 }
 
 onMounted(() => {
-	// Check session status and update auth state
-	const unwatchSession = watch(session, (newSession) => {
-		if (newSession === null || !("userId" in newSession))
-			return navigateTo("/login");
-
-		auth.value.authenticated = "username" in newSession;
-		auth.value.userId = newSession.userId || "";
-		auth.value.username = newSession.username || "";
-
-		unwatchSession();
-	});
-
 	const unwatchAuth = watch(auth, (newAuth) => {
 		if (!newAuth.authenticated) return;
 		if (gotKeyPair.value) unwatchAuth();
@@ -169,16 +159,52 @@ onMounted(() => {
 		}
 	});
 
-	$socket.onclose = async (e) => {
-		await removeSession();
-		auth.value = {
-			authenticated: false,
-			userId: "",
-			username: "",
-			currentDevice: null
+	// Initialize socket (automatic restarts when closed)
+	if (!socket.value) {
+		const wsProtocol =
+			window.location.protocol === "https:" ? "wss://" : "ws://";
+		const wsURL = `${wsProtocol}${window.location.host}`;
+
+		socket.value = new WebSocket(wsURL);
+
+		const onClose = async () => {
+			socket.value = new WebSocket(wsURL);
+			socket.value.addEventListener("close", onClose);
 		};
-		return await navigateTo("/login");
-	};
+
+		socket.value.addEventListener("close", onClose);
+
+		return;
+	}
+
+	watch(socket, (newSocket) => {
+		console.log(socket.value, newSocket);
+		if (!newSocket) return;
+
+		newSocket.addEventListener("message", async (e) => {
+			const message = JSON.parse(e.data) as SocketMessage<any>;
+
+			if (message.event !== "auth" || message.mode !== "delete") return;
+
+			await removeSession();
+			auth.value = {
+				authenticated: false,
+				userId: "",
+				username: "",
+				currentDevice: null
+			};
+		});
+
+		newSocket.addEventListener("close", async (e) => {
+			await removeSession();
+			auth.value = {
+				authenticated: false,
+				userId: "",
+				username: "",
+				currentDevice: null
+			};
+		});
+	});
 });
 </script>
 
