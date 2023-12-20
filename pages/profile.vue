@@ -78,7 +78,7 @@ onMounted(() => {
 
 	refreshInterval.value = window.setInterval(() => {
 		refresh({ dedupe: true });
-	}, 5000);
+	}, 1000);
 });
 
 onUnmounted(() => window.clearInterval(refreshInterval.value));
