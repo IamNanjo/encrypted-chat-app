@@ -6,7 +6,6 @@ export interface User {
 		id: string;
 		name: string;
 		key: string;
-		created: string;
 		lastUsed: string;
 	} | null;
 }
