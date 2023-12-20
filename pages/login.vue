@@ -58,13 +58,11 @@ async function handleSubmit() {
 			username: username.value,
 			password: password.value
 		}
-	})
-		.then(() => {
-			refresh();
-		})
-		.catch((err) => {
-			error.value = err.data;
-		});
+	}).catch((err) => {
+		error.value = err.data;
+	});
+
+	await refresh();
 }
 
 onMounted(() => {
