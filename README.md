@@ -1,7 +1,11 @@
 # Encrypted Chat App
 
 This chat app uses end-to-end-encryption with RSA-OAEP.
-The encryption is done on the client using the Web Crypto API
+The encryption is done on the client using the Web Crypto API.
+The encrypted messages and public keys are saved on the server and they are then sent to users.
+New messages are fetched using polling.
+In a future update the app will use Websockets instead of polling for faster updates and less unnecessary requests.
+This will also allow only decrypting new messages instead of the whole list every time, making the app far more efficient.
 
 ## Screenshots
 
