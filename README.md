@@ -11,6 +11,8 @@ The encryption is done on the client using the Web Crypto API
 
 ![User search](screenshots/user-search.png)
 
+![Chat with messages](screenshots/chat-with-messages.png)
+
 ## Setup
 
 Make sure to install the dependencies:
