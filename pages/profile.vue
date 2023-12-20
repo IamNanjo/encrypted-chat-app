@@ -1,15 +1,22 @@
 <script setup lang="ts">
-const session = await useSession({ fetchSessionOnInitialization: false });
-const auth = useAuth();
-const { data: profile, execute: refresh } = await useLazyFetch("/api/profile", {
-	watch: [auth]
+const { remove: removeSession } = await useSession({
+	fetchSessionOnInitialization: false
 });
+const auth = useAuth();
+const socket = useSocket();
+
+interface Device {
+	id: string;
+	lastUsed: string;
+	name: string;
+}
+
+const { data: profile } = await useLazyFetch("/api/profile");
 
 const currentPassword = ref("");
 const newPassword = ref("");
 const error = ref("");
 const errorTimeout = ref(0);
-const refreshInterval = ref(0);
 
 async function handleSubmit() {
 	$fetch("/api/profile", {
@@ -20,10 +27,14 @@ async function handleSubmit() {
 			newPassword: newPassword.value
 		}
 	})
-		.then(() => {
+		.then((res) => {
 			currentPassword.value = "";
 			newPassword.value = "";
-			refresh({ dedupe: true });
+
+			if (typeof res === "string") return;
+
+			profile.value = res;
+			auth.value.username = res.username;
 		})
 		.catch((err) => {
 			err.value = err.data;
@@ -32,7 +43,13 @@ async function handleSubmit() {
 
 async function deleteUser() {
 	$fetch("/api/user", { method: "DELETE" }).then(async () => {
-		await session.remove();
+		if (socket.value) {
+			// Close socket
+			socket.value.send(
+				JSON.stringify({ event: "auth", mode: "delete" } as SocketMessage<any>)
+			);
+		}
+		await removeSession();
 		auth.value = {
 			authenticated: false,
 			userId: "",
@@ -47,13 +64,9 @@ async function deleteDevice(deviceId: string) {
 	$fetch("/api/device", {
 		method: "DELETE",
 		body: { deviceId }
-	})
-		.then(() => {
-			refresh({ dedupe: true });
-		})
-		.catch((err) => {
-			err.value = err.data;
-		});
+	}).catch((err) => {
+		err.value = err.data;
+	});
 }
 
 onMounted(() => {
@@ -76,12 +89,37 @@ onMounted(() => {
 		}
 	});
 
-	refreshInterval.value = window.setInterval(() => {
-		refresh({ dedupe: true });
-	}, 5000);
-});
+	const onMessage = async (e: MessageEvent) => {
+		const message: SocketMessage<Device> = JSON.parse(e.data);
 
-onUnmounted(() => window.clearInterval(refreshInterval.value));
+		if (message.event !== "device") return;
+
+		switch (message.mode) {
+			case "post":
+				if (!profile.value) break;
+				profile.value.devices.push(message.data);
+
+				break;
+
+			case "delete":
+				if (!profile.value) break;
+				profile.value.devices = profile.value.devices
+					.filter((device) => device.id !== message.data.id)
+					.sort(
+						(a, b) =>
+							new Date(a.lastUsed).getTime() + new Date(b.lastUsed).getTime()
+					);
+
+				break;
+		}
+	};
+
+	if (socket.value) socket.value.addEventListener("message", onMessage);
+
+	watch(socket, () => {
+		if (socket.value) socket.value.addEventListener("message", onMessage);
+	});
+});
 </script>
 
 <template>
@@ -137,13 +175,27 @@ onUnmounted(() => window.clearInterval(refreshInterval.value));
 							</tr>
 						</thead>
 						<tbody>
-							<tr :key="device.id" v-for="device in profile?.devices">
+							<tr
+								:key="device.id"
+								v-for="device in profile?.devices"
+								:class="
+									auth.currentDevice !== null &&
+									device.id === auth.currentDevice.id &&
+									'current-device'
+								"
+							>
 								<td>{{ device.name }}</td>
 								<td>
 									{{ new Date(device.lastUsed).toLocaleString("en-GB") }}
 								</td>
 								<td>
-									<button @click="() => deleteDevice(device.id)">
+									<button
+										@click="() => deleteDevice(device.id)"
+										:disabled="
+											auth.currentDevice !== null &&
+											device.id === auth.currentDevice.id
+										"
+									>
 										<Icon name="material-symbols:delete-rounded" size="1.5em" />
 									</button>
 								</td>
@@ -241,6 +293,10 @@ main > div {
 
 	button {
 		background-color: transparent;
+	}
+
+	.current-device {
+		font-weight: 700;
 	}
 }
 

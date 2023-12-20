@@ -1,5 +1,12 @@
 import { prisma } from "~/server/db";
 
+export interface Device {
+	id: string;
+	name: string;
+	key: string;
+	lastUsed: Date;
+}
+
 export default defineEventHandler(async (e) => {
 	if (!("userId" in e.context.session)) {
 		return await sendRedirect(e, "/login");
@@ -20,6 +27,30 @@ export default defineEventHandler(async (e) => {
 
 	const deviceId = body.deviceId;
 
-    setResponseStatus(e, 204);
-	return await prisma.device.delete({ where: { id: deviceId, userId } });
+	const device = await prisma.device.delete({
+		where: { id: deviceId, userId },
+		select: {
+			id: true,
+			name: true,
+			key: true,
+			lastUsed: true
+		}
+	});
+
+	if (global.clients && userId in global.clients) {
+		for (const socket of global.clients[userId]) {
+			if (socket.readyState !== socket.OPEN) continue;
+
+			socket.send(
+				JSON.stringify({
+					event: "device",
+					mode: "delete",
+					data: device
+				} as SocketMessage<Device>)
+			);
+		}
+	}
+
+	setResponseStatus(e, 204);
+	return device;
 });
