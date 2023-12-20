@@ -1,59 +1,72 @@
 <script setup lang="ts">
+import { compileScript } from "vue/compiler-sfc";
+
 const auth = useAuth();
 const chat = useChat();
 const keyPair = useKeyPair();
+const socket = useSocket();
+
+interface Message {
+	id: string;
+	content: string;
+	created: string;
+	chatId: string;
+	deviceId: string;
+	sender: {
+		id: string;
+		username: string;
+	};
+}
 
 const newMessage = ref("");
-const now = ref(0);
-const interval = ref(0);
-const refreshCounter = ref(0);
+const messages = ref<Message[]>([]);
 
-import type { Message } from "~/server/api/messages.get";
-
-const {
-	data: messages,
-	execute: getMessages,
-	refresh: refreshMessages
-} = await useLazyAsyncData(
+const { execute: getMessages } = await useLazyAsyncData(
 	"messages",
-	(): Promise<Message[]> =>
-		$fetch("/api/messages", {
+	async () => {
+		const data = await $fetch("/api/messages", {
 			query: {
 				chatId: chat.value?.id,
 				deviceId: auth.value.currentDevice?.id
 			}
-		})
-			.then(async (res) => {
-				const decoder = new TextDecoder();
+		});
 
-				for (let i = 0, len = res.length; i < len; i++) {
-					const content = atob(res[i].content);
-					const messageAsUint8Array = new Uint8Array(content.length);
+		const decoder = new TextDecoder();
 
-					for (let j = 0, jLen = content.length; j < jLen; j++) {
-						messageAsUint8Array[j] = content.charCodeAt(j);
-					}
+		for (let i = 0, len = data.length; i < len; i++) {
+			const encryptedContent = data[i].content;
 
-					const decryptedBuffer = await decryptMessage(
-						messageAsUint8Array.buffer
-					);
-					res[i].content = decoder.decode(decryptedBuffer);
-				}
+			const decryptedBuffer = await decryptMessage(encryptedContent);
+			data[i].content = decryptedBuffer
+				? decoder.decode(decryptedBuffer)
+				: data[i].content;
+		}
 
-				return res;
-			})
-			.catch(() => []),
+		messages.value = (data || []) as Message[];
+	},
 	{
 		server: false,
-		immediate: false,
-		default: (): Message[] => []
+		immediate: false
 	}
 );
 
 watch(chat, async (newChat) => {
 	if (newChat && newChat.id && keyPair.value) getMessages();
-	else if (!newChat) messages.value = [] as Message[];
+	if (!newChat) messages.value = [];
 });
+
+watch(messages, () => setTimeout(scrollToBottom, 0));
+
+function scrollToBottom() {
+	const scrollContainer = document.getElementById(
+		"chat__messages"
+	) as HTMLDivElement;
+
+	scrollContainer.scrollTo({
+		top: scrollContainer.scrollHeight,
+		behavior: "smooth"
+	});
+}
 
 async function sendMessage() {
 	if (!chat.value || !newMessage.value) return;
@@ -86,25 +99,26 @@ async function sendMessage() {
 		}
 	}
 
-	await refreshMessages({ dedupe: true });
-
 	newMessage.value = "";
+}
 
-	const scrollContainer = document.getElementById(
-		"chat__messages"
-	) as HTMLDivElement;
+async function deleteMessage(message: string) {
+	if (!chat.value || !message) return;
 
-	scrollContainer.scrollTo({
-		top: scrollContainer.scrollHeight,
-		behavior: "smooth"
+	await $fetch("/api/messages", {
+		method: "DELETE",
+		body: {
+			chat: chat.value.id,
+			message: message
+		}
 	});
 }
 
-function getRelativeTime(timestamp: string) {
+function getRelativeTime(timestamp: string): string {
 	const pastTime = new Date(timestamp).getTime();
 
 	// Time difference in different units
-	const seconds = Math.floor((now.value - pastTime) / 1000);
+	const seconds = Math.floor((Date.now() - pastTime) / 1000);
 	const minutes = Math.floor(seconds / 60);
 	const hours = Math.floor(minutes / 60);
 	const days = Math.floor(hours / 24);
@@ -135,16 +149,27 @@ const encryptMessage = async (key: CryptoKey, plaintext: ArrayBuffer) => {
 	return btoa(binary);
 };
 
-async function decryptMessage(encryptedContent: ArrayBuffer) {
+async function decryptMessage(encryptedContent: string) {
 	if (!keyPair.value) {
 		reloadNuxtApp({ force: true, persistState: true });
-		return encryptedContent;
+		return null;
 	}
 
+	encryptedContent = atob(encryptedContent);
+
+	const encryptedUint8Array = new Uint8Array(encryptedContent.length);
+
+	for (let i = 0, len = encryptedContent.length; i < len; i++) {
+		encryptedUint8Array[i] = encryptedContent.charCodeAt(i);
+	}
+
+	const cipherTextBuffer = encryptedUint8Array.buffer;
+
 	return crypto.subtle
-		.decrypt({ name: "RSA-OAEP" }, keyPair.value.privateKey, encryptedContent)
+		.decrypt({ name: "RSA-OAEP" }, keyPair.value.privateKey, cipherTextBuffer)
 		.catch(() => {
-			return encryptedContent;
+			console.error("Decryption failed");
+			return null;
 		});
 }
 
@@ -160,17 +185,57 @@ onMounted(() => {
 		}
 	};
 
-	interval.value = window.setInterval(() => {
-		now.value = Date.now();
-		if (chat.value && keyPair.value && refreshCounter.value % 4 === 0) {
-			refreshMessages({ dedupe: true });
-		}
-		refreshCounter.value++;
-	}, 500);
-});
+	const onMessage = async (e: MessageEvent) => {
+		const message: SocketMessage<Message> = JSON.parse(e.data);
 
-onBeforeUnmount(() => {
-	if (interval.value) clearInterval(interval.value);
+		if (message.event !== "message") return;
+
+		switch (message.mode) {
+			case "post":
+				if (
+					!auth.value.currentDevice ||
+					!chat.value ||
+					chat.value.id !== message.data.chatId ||
+					message.data.deviceId !== auth.value.currentDevice.id
+				)
+					break;
+
+				const decoder = new TextDecoder();
+				const decryptedMessage = await decryptMessage(message.data.content);
+				message.data.content = decryptedMessage
+					? decoder.decode(decryptedMessage)
+					: message.data.content;
+				messages.value = [...messages.value, message.data];
+				messages.value = messages.value.sort(
+					(a, b) => Number(a.created) - Number(b.created)
+				);
+
+				break;
+
+			case "delete":
+				if (
+					!auth.value.currentDevice ||
+					!chat.value ||
+					chat.value.id !== message.data.chatId ||
+					message.data.deviceId !== auth.value.currentDevice.id
+				)
+					break;
+
+				messages.value = messages.value
+					.filter((msg) => msg.id !== message.data.id)
+					.sort(
+						(a, b) => Number(new Date(a.created)) - Number(new Date(b.created))
+					);
+
+				break;
+		}
+	};
+
+	if (socket.value) socket.value.addEventListener("message", onMessage);
+
+	watch(socket, () => {
+		if (socket.value) socket.value.addEventListener("message", onMessage);
+	});
 });
 </script>
 
@@ -179,8 +244,17 @@ onBeforeUnmount(() => {
 		<div id="chat__messages" class="chat__messages">
 			<div v-for="message in messages" :key="message.id" class="chat__message">
 				<div class="chat__message-info">
-					{{ message.sender.username || "Deleted user" }} -
-					{{ getRelativeTime(message.created) }}
+					<div>
+						{{ message.sender.username || "Deleted user" }} -
+						{{ getRelativeTime(message.created) }}
+					</div>
+					<Icon
+						v-if="auth.userId === message.sender.id"
+						class="clickable"
+						name="material-symbols:delete-rounded"
+						size="1.5em"
+						@click="() => deleteMessage(message.id)"
+					/>
 				</div>
 				<div class="chat__message-content">
 					{{ message.content }}
@@ -204,7 +278,7 @@ onBeforeUnmount(() => {
 				type="submit"
 				title="Send"
 			>
-				<Icon name="material-symbols:send-rounded" size="2em" />
+				<Icon name="material-symbols:send-rounded" size="1.5em" />
 			</button>
 		</form>
 	</div>
@@ -216,7 +290,6 @@ onBeforeUnmount(() => {
 	display: flex;
 	min-width: 0;
 	flex-direction: column;
-	gap: 1em;
 	background-color: var(--bg-primary);
 	justify-content: space-between;
 	padding: 1em;
@@ -230,6 +303,7 @@ onBeforeUnmount(() => {
 		gap: 1em;
 		width: 100%;
 		padding-right: 0.5em;
+		padding-bottom: 1em;
 		overflow-x: hidden;
 		text-overflow: ellipsis;
 		overflow-y: auto;
@@ -244,10 +318,18 @@ onBeforeUnmount(() => {
 		background-color: var(--bg-raise);
 
 		&-info {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			gap: 1em;
 			color: var(--text-muted);
 			width: max-content;
 			overflow: hidden;
 			user-select: none;
+
+			.icon {
+				color: var(--ff-primary);
+			}
 		}
 
 		&-content {
@@ -261,12 +343,12 @@ onBeforeUnmount(() => {
 		display: flex;
 		width: 100%;
 		height: max-content;
+		font-size: 1.25em;
 	}
 
 	&__textfield {
 		background-color: var(--bg-raise);
 		flex: 1;
-		font-size: 1.5em;
 		height: max-content;
 		max-height: 5em;
 		padding: 0.25em;

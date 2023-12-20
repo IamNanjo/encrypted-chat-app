@@ -46,19 +46,21 @@ export default defineEventHandler(async (e) => {
 		}
 	});
 
-	for (const member of chat.members) {
-		if (!(member.id in global.clients)) continue;
+	if (global.clients) {
+		for (const member of chat.members) {
+			if (!(member.id in global.clients)) continue;
 
-		for (const socket of global.clients[member.id]) {
-			if (socket.readyState !== socket.OPEN) continue;
+			for (const socket of global.clients[member.id]) {
+				if (socket.readyState !== socket.OPEN) continue;
 
-			socket.send(
-				JSON.stringify({
-					event: "chat",
-					mode: "delete",
-					data: chat
-				} as SocketMessage<Chat>)
-			);
+				socket.send(
+					JSON.stringify({
+						event: "chat",
+						mode: "delete",
+						data: chat
+					} as SocketMessage<Chat>)
+				);
+			}
 		}
 	}
 

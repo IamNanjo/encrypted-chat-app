@@ -1,12 +1,10 @@
 <script setup lang="ts">
 const auth = useAuth();
 const isOpen = useChatMenu();
-const { $socket } = useNuxtApp();
 const selectedChat = useChat();
+const socket = useSocket();
 
 const userSearch = ref("");
-
-const interval = ref(0);
 
 interface RawChat {
 	id: string;
@@ -17,21 +15,18 @@ interface RawChat {
 	}[];
 }
 
-const { data: chats, execute: getChats } = await useLazyAsyncData(
+const { data: chats } = await useLazyAsyncData(
 	"chats",
 	async () => {
+		await refreshNuxtData("updateDevice");
 		const data = await $fetch("/api/chats");
-		return parseChats(data);
+		return await parseChats(data);
 	},
-	{
-		server: false,
-		immediate: false
-	}
+	{ server: false, default: () => [] }
 );
 
-const { data: users, execute: getUsers } = await useLazyFetch("/api/users", {
+const { data: users } = await useLazyFetch("/api/users", {
 	server: false,
-	immediate: false,
 	query: { q: userSearch.value },
 	watch: [userSearch]
 });
@@ -48,8 +43,7 @@ async function parseChat(rawChat: RawChat): Promise<Chat> {
 			devices: []
 		});
 
-		for (let j = 0, jlen = member.devices.length; j < jlen; j++) {
-			const device = member.devices[j];
+		for (const device of member.devices) {
 			const parsedKey = await crypto.subtle.importKey(
 				"jwk",
 				JSON.parse(device.key),
@@ -68,8 +62,8 @@ async function parseChat(rawChat: RawChat): Promise<Chat> {
 async function parseChats(rawChats: RawChat[]): Promise<Chat[]> {
 	const temp: Chat[] = [];
 
-	for (let i = 0, len = rawChats.length; i < len; i++) {
-		temp.push(await parseChat(rawChats[i]));
+	for (const rawChat of rawChats) {
+		temp.push(await parseChat(rawChat));
 	}
 
 	return temp;
@@ -81,17 +75,16 @@ function showUserSelect() {
 }
 
 async function newChat(user: string) {
-	$fetch("/api/chats", {
+	await refreshNuxtData("updateDevice");
+	const res = await $fetch("/api/chats", {
 		method: "POST",
 		body: { user }
-	})
-		.then(async (res) => {
-			isOpen.value = false;
-			if (res !== null) {
-				selectChat(await parseChat(res));
-			}
-		})
-		.catch(console.error);
+	});
+
+	isOpen.value = false;
+	if (res !== null) {
+		selectChat(await parseChat(res));
+	}
 }
 
 function selectChat(chat: Chat) {
@@ -101,6 +94,7 @@ function selectChat(chat: Chat) {
 
 async function deleteChat(e: Event, id: string) {
 	e.stopPropagation();
+	await refreshNuxtData("updateDevice");
 
 	if (selectedChat.value && selectedChat.value.id === id) {
 		selectedChat.value = null;
@@ -110,27 +104,27 @@ async function deleteChat(e: Event, id: string) {
 }
 
 onMounted(() => {
-	getUsers();
-	getChats();
-
-	$socket.addEventListener("message", async (e) => {
+	const onMessage = async (e: MessageEvent) => {
 		const message: SocketMessage<RawChat> = JSON.parse(e.data);
 
 		if (message.event !== "chat") return;
 
 		switch (message.mode) {
 			case "post":
-				chats.value?.unshift(await parseChat(message.data));
+				chats.value = [await parseChat(message.data), ...chats.value];
 				break;
 
 			case "delete":
+				chats.value = chats.value.filter((chat) => chat.id !== message.data.id);
 				break;
 		}
-	});
-});
+	};
 
-onBeforeUnmount(() => {
-	clearInterval(interval.value);
+	if (socket.value) socket.value.addEventListener("message", onMessage);
+
+	watch(socket, () => {
+		if (socket.value) socket.value.addEventListener("message", onMessage);
+	});
 });
 </script>
 
@@ -172,8 +166,10 @@ onBeforeUnmount(() => {
 				@click="() => selectChat(chat)"
 			>
 				<span>{{
-					chat.members.filter((user) => user.username !== auth.username)[0]
-						.username
+					chat.members
+						.filter((user) => user.username !== auth.username)
+						.map((user) => user.username)
+						.join(", ")
 				}}</span>
 				<Icon
 					name="material-symbols:delete-rounded"

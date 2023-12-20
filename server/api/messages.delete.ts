@@ -1,5 +1,16 @@
 import { prisma } from "~/server/db";
-import { Message } from "./messages.get";
+
+interface Message {
+	id: string;
+	content: string;
+	created: Date;
+	chatId: string;
+	deviceId: string;
+	sender: {
+		id: string;
+		username: string;
+	};
+}
 
 export default defineEventHandler(async (e) => {
 	if (!("userId" in e.context.session)) {
@@ -39,6 +50,8 @@ export default defineEventHandler(async (e) => {
 			id: true,
 			content: true,
 			created: true,
+			chatId: true,
+			deviceId: true,
 			sender: {
 				select: { id: true, username: true }
 			}
