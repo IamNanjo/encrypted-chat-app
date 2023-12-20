@@ -1,4 +1,5 @@
 import { prisma } from "~/server/db";
+import type { Message } from "./messages.get";
 
 export default defineEventHandler(async (e) => {
 	if (!("userId" in e.context.session)) {
@@ -55,11 +56,41 @@ export default defineEventHandler(async (e) => {
 			id: true,
 			content: true,
 			created: true,
+			chatId: true,
+			deviceId: true,
 			sender: {
 				select: { username: true }
 			}
 		}
 	});
+
+	const recipient = await prisma.device.findUnique({
+		where: { id: body.deviceId },
+		select: { userId: true }
+	});
+
+	if (
+		recipient &&
+		global.clients &&
+		recipient.userId in global.clients &&
+		global.clients[recipient.userId]
+	) {
+		const recipientSockets = global.clients[recipient.userId];
+
+		for (let i = 0, len = recipientSockets.length; i < len; i++) {
+			const socket = recipientSockets[i];
+
+			if (socket.readyState !== socket.OPEN) continue;
+
+			socket.send(
+				JSON.stringify({
+					event: "message",
+					mode: "post",
+					data: message
+				} as SocketMessage<Message>)
+			);
+		}
+	}
 
 	setResponseStatus(e, 201);
 	return message;
