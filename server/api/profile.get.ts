@@ -12,6 +12,7 @@ export default defineEventHandler(async (e) => {
 			username: true,
 			created: true,
 			devices: {
+				orderBy: { lastUsed: "desc" },
 				select: {
 					id: true,
 					name: true,
