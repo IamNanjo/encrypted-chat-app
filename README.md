@@ -1,6 +1,15 @@
-# Nuxt 3 Minimal Starter
+# Encrypted Chat App
 
-Look at the [Nuxt 3 documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+This chat app uses end-to-end-encryption with RSA-OAEP.
+The encryption is done on the client using the Web Crypto API
+
+## Screenshots
+
+![Login page](screenshots/login.png)
+
+![User profile](screenshots/user-profile.png)
+
+![User search](screenshots/user-search.png)
 
 ## Setup
 
@@ -17,7 +26,7 @@ yarn install
 bun install
 ```
 
-## Database Setup
+### Database Setup
 
 ```bash
 # npm
@@ -33,7 +42,7 @@ bun dbinit
 bun dbgenerate
 ```
 
-## Development Server
+### Development Server
 
 Start the development server on `http://localhost:3000`:
 
@@ -45,10 +54,10 @@ npm run dev
 yarn dev
 
 # bun
-bun run dev
+bun dev
 ```
 
-## Production
+### Production
 
 Build the application for production:
 
@@ -73,7 +82,18 @@ npm run preview
 yarn preview
 
 # bun
-bun run preview
+bun preview
 ```
 
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+Serve the production build using PM2:
+
+```bash
+# npm
+npm run start
+
+# yarn
+yarn start
+
+# bun
+bun start
+```
