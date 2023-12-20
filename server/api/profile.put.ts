@@ -59,7 +59,7 @@ export default defineEventHandler(async (e) => {
 
 	const newHash = await bcrypt.hash(body.newPassword, 12);
 
-	return await prisma.user.update({
+	const profile = await prisma.user.update({
 		where: { id: e.context.session.userId },
 		data: {
 			username: body.username,
@@ -78,4 +78,6 @@ export default defineEventHandler(async (e) => {
 			}
 		}
 	});
+
+	return profile;
 });
