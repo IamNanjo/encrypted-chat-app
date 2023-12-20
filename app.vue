@@ -8,6 +8,15 @@ const keyPair = useKeyPair();
 
 const gotKeyPair = ref(false);
 
+const { refresh: refreshDevice } = await useLazyAsyncData(
+	"updateDevice",
+	updateDevice,
+	{
+		server: false,
+		immediate: false
+	}
+);
+
 function generateKeyPair() {
 	return crypto.subtle.generateKey(
 		{
@@ -123,7 +132,7 @@ function getKeyPairFromIDB() {
 
 async function updateDevice() {
 	if (auth.value.authenticated && keyPair.value) {
-		$fetch("/api/device", {
+		const data = await $fetch("/api/device", {
 			method: "POST",
 			body: {
 				key: JSON.stringify(
@@ -131,16 +140,10 @@ async function updateDevice() {
 				)
 			},
 			retry: false
-		})
-			.then((res) => {
-				if (res) {
-					auth.value.currentDevice = res;
-				}
-			})
-			.catch(console.error);
-	}
+		}).catch(console.error);
 
-	setTimeout(updateDevice, 5000);
+		if (data) auth.value.currentDevice = data;
+	}
 }
 
 onMounted(() => {
@@ -154,7 +157,7 @@ onMounted(() => {
 
 	const unwatchKeyPair = watch(keyPair, (newKeyPair) => {
 		if (newKeyPair) {
-			updateDevice();
+			refreshDevice();
 			unwatchKeyPair();
 		}
 	});
@@ -225,6 +228,18 @@ onMounted(() => {
 	filter: blur(1rem);
 }
 
+::-webkit-scrollbar::-webkit-scrollbar {
+	width: var(--scrollbar-size) !important;
+	height: var(--scrollbar-size) !important;
+}
+::-webkit-scrollbar-track::-webkit-scrollbar-track {
+	background-color: transparent;
+}
+::-webkit-scrollbar-thumb::-webkit-scrollbar-thumb {
+	background-color: hsl(0, 0%, 69%);
+	border-radius: var(--scrollbar-size);
+}
+
 *,
 *::before,
 *::after {
@@ -250,6 +265,7 @@ onMounted(() => {
 	--text-muted: #444444;
 	--ff-primary: Roboto, sans-serif;
 	--ff-mono: "JetBrains Mono", monospace;
+	--scrollbar-size: 6px;
 }
 :root.dark {
 	color-scheme: dark;
@@ -263,6 +279,7 @@ onMounted(() => {
 	--text-muted: #999999;
 	--ff-primary: Roboto, sans-serif;
 	--ff-mono: "JetBrains Mono", monospace;
+	--scrollbar-size: 6px;
 }
 
 :root .icon {
@@ -288,6 +305,7 @@ body {
 	color: var(--text-primary);
 	font-family: var(--ff-primary);
 	z-index: 0;
+	scrollbar-width: thin;
 }
 
 pre,
