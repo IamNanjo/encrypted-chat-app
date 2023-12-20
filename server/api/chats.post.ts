@@ -1,5 +1,14 @@
 import { prisma } from "~/server/db";
 
+export interface Chat {
+	id: string;
+	members: {
+		id: string;
+		username: string;
+		devices: { id: string; key: string }[];
+	}[];
+}
+
 export default defineEventHandler(async (e) => {
 	if (!("userId" in e.context.session)) {
 		return await sendRedirect(e, "/login");
@@ -68,6 +77,22 @@ export default defineEventHandler(async (e) => {
 			}
 		}
 	});
+
+	for (const member of chat.members) {
+		if (!(member.id in global.clients)) continue;
+
+		for (const socket of global.clients[member.id]) {
+			if (socket.readyState !== socket.OPEN) continue;
+
+			socket.send(
+				JSON.stringify({
+					event: "chat",
+					mode: "post",
+					data: chat
+				} as SocketMessage<Chat>)
+			);
+		}
+	}
 
 	setResponseStatus(e, 201);
 	return chat;
