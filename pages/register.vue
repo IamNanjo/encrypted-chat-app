@@ -1,6 +1,8 @@
 <script setup lang="ts">
 const auth = useAuth();
-const { session, refresh } = await useSession();
+const { session, refresh } = await useSession({
+	fetchSessionOnInitialization: false
+});
 
 const username = ref("");
 const password = ref("");
@@ -19,7 +21,9 @@ onMounted(() => {
 				currentDevice: null
 			};
 
-			if (auth.value.authenticated) return navigateTo("/");
+			if (auth.value.authenticated) {
+				return navigateTo("/");
+			}
 		}
 	});
 });
