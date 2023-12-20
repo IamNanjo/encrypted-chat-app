@@ -67,11 +67,8 @@ onMounted(() => {
 	});
 
 	watch(error, (newError) => {
-		if (errorTimeout.value) {
-			clearTimeout(errorTimeout.value);
-			errorTimeout.value = 0;
-		}
 		if (newError) {
+			window.clearTimeout(errorTimeout.value);
 			errorTimeout.value = window.setTimeout(() => {
 				error.value = "";
 			}, 5000);
