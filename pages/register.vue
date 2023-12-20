@@ -57,18 +57,18 @@ async function handleSubmit() {
 		return (error.value = "The passwords do not match");
 	}
 
-	$fetch("/api/user", {
+	await $fetch("/api/user", {
 		method: "POST",
 		body: {
 			username: username.value,
 			password: password.value,
 			passwordConfirm: passwordConfirm.value
 		}
-	})
-		.then(() => refresh())
-		.catch((err) => {
-			error.value = err.data;
-		});
+	}).catch((err) => {
+		error.value = err.data;
+	});
+
+	await refresh();
 }
 
 onMounted(() => {
