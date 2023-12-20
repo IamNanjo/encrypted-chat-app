@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const auth = useAuth();
+const socket = useSocket();
 const { session, refresh } = await useSession({
 	fetchSessionOnInitialization: false
 });
@@ -22,7 +23,26 @@ onMounted(() => {
 			};
 
 			if (auth.value.authenticated) {
-				return navigateTo("/");
+				if (socket.value) {
+					const wsAuthenticate = (socket: WebSocket) => {
+						window.setTimeout(() => {
+							if (socket.readyState !== socket.OPEN)
+								return wsAuthenticate(socket);
+
+							socket.send(
+								JSON.stringify({
+									event: "auth",
+									mode: "post",
+									data: { userId: auth.value.userId, password: password.value }
+								} as SocketMessage<{ userId: string; password: string }>)
+							);
+
+							return navigateTo("/");
+						}, 100);
+					};
+
+					wsAuthenticate(socket.value);
+				}
 			}
 		}
 	});
