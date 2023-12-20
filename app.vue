@@ -1,5 +1,6 @@
 <script setup lang="ts">
-const { session } = await useSession();
+const { session, remove: removeSession } = await useSession();
+const { $socket } = useNuxtApp();
 const auth = useAuth();
 const keyPair = useKeyPair();
 
@@ -167,6 +168,25 @@ onMounted(() => {
 			unwatchKeyPair();
 		}
 	});
+
+	$socket.onopen = () => {
+		$socket.send(`${auth.value.userId}`);
+	};
+
+	$socket.onmessage = (e) => {
+		console.log(JSON.parse(e.data));
+	};
+
+	$socket.onclose = async (e) => {
+		await removeSession();
+		auth.value = {
+			authenticated: false,
+			userId: "",
+			username: "",
+			currentDevice: null
+		};
+		return await navigateTo("/login");
+	};
 });
 </script>
 
@@ -239,7 +259,8 @@ onMounted(() => {
 	display: contents;
 }
 
-html, body {
+html,
+body {
 	height: 100%;
 }
 
