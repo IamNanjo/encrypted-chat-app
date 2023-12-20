@@ -23,17 +23,25 @@ export default defineEventHandler(async (e) => {
 		return send(e, "You cannot start a chat with yourself");
 	}
 
-	const alreadyExists = await prisma.chat.count({
+	const chatMemberIds = [e.context.session.userId, body.user];
+
+	const existingChat = await prisma.chat.findFirst({
 		where: {
 			members: {
 				every: {
-					id: { in: [e.context.session.userId, body.user] }
+					id: { in: chatMemberIds }
 				}
 			}
-		}
+		},
+		include: { members: true }
 	});
 
-	if (alreadyExists) {
+	// Users are not the same for the existing chat and the new one
+	if (
+		existingChat &&
+		(existingChat.members.length === 2 ||
+			existingChat.members.every((member) => chatMemberIds.includes(member.id)))
+	) {
 		setResponseStatus(e, 409);
 		return send(e, "Chat already exists");
 	}
