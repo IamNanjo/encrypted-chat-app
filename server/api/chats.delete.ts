@@ -1,4 +1,5 @@
 import { prisma } from "~/server/db";
+import type { Chat } from "./chats.post";
 
 export default defineEventHandler(async (e) => {
 	if (!("userId" in e.context.session)) {
@@ -26,9 +27,40 @@ export default defineEventHandler(async (e) => {
 		}
 	}
 
-	await prisma.chat.delete({
-		where: { id: chatId, members: { some: { id: userId } } }
+	chat = await prisma.chat.delete({
+		where: { id: chatId, members: { some: { id: userId } } },
+		select: {
+			id: true,
+			members: {
+				select: {
+					id: true,
+					username: true,
+					devices: {
+						select: {
+							id: true,
+							key: true
+						}
+					}
+				}
+			}
+		}
 	});
+
+	for (const member of chat.members) {
+		if (!(member.id in global.clients)) continue;
+
+		for (const socket of global.clients[member.id]) {
+			if (socket.readyState !== socket.OPEN) continue;
+
+			socket.send(
+				JSON.stringify({
+					event: "chat",
+					mode: "delete",
+					data: chat
+				} as SocketMessage<Chat>)
+			);
+		}
+	}
 
 	return await send(e);
 });
