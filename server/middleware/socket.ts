@@ -10,7 +10,7 @@ declare global {
 	var wss: WebSocketServer;
 	var clients: Clients;
 	interface SocketMessage<T> {
-		event: "auth" | "chat" | "message";
+		event: "auth" | "chat" | "message" | "device";
 		mode: "post" | "delete";
 		data: T;
 	}
