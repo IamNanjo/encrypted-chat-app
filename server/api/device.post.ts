@@ -1,5 +1,6 @@
 import { prisma } from "~/server/db";
 import { UAParser } from "ua-parser-js";
+import type { Device } from "./device.delete";
 
 export default defineEventHandler(async (e) => {
 	if (!("userId" in e.context.session)) {
@@ -29,7 +30,7 @@ export default defineEventHandler(async (e) => {
 	const oneWeekAgo = new Date(Date.now() - 604800000);
 	await prisma.device.deleteMany({ where: { lastUsed: { lte: oneWeekAgo } } });
 
-	const updatedDevice = prisma.device.upsert({
+	const updatedDevice = await prisma.device.upsert({
 		where: { key: body.key },
 		create: {
 			name: `${device.browser.name} ${device.os.name}`,
@@ -46,6 +47,20 @@ export default defineEventHandler(async (e) => {
 			lastUsed: true
 		}
 	});
+
+	if (global.clients && userId in global.clients) {
+		for (const socket of global.clients[userId]) {
+			if (socket.readyState !== socket.OPEN) continue;
+
+			socket.send(
+				JSON.stringify({
+					event: "device",
+					mode: "post",
+					data: updatedDevice
+				} as SocketMessage<Device>)
+			);
+		}
+	}
 
 	return updatedDevice;
 });
