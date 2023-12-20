@@ -1,7 +1,7 @@
 <script setup lang="ts">
 const session = await useSession({ fetchSessionOnInitialization: false });
 const auth = useAuth();
-const { data: profile, refresh } = await useLazyFetch("/api/profile", {
+const { data: profile, execute: refresh } = await useLazyFetch("/api/profile", {
 	watch: [auth]
 });
 
@@ -9,6 +9,7 @@ const currentPassword = ref("");
 const newPassword = ref("");
 const error = ref("");
 const errorTimeout = ref(0);
+const refreshInterval = ref(0);
 
 async function handleSubmit() {
 	$fetch("/api/profile", {
@@ -22,7 +23,7 @@ async function handleSubmit() {
 		.then(() => {
 			currentPassword.value = "";
 			newPassword.value = "";
-			refresh();
+			refresh({ dedupe: true });
 		})
 		.catch((err) => {
 			err.value = err.data;
@@ -48,7 +49,7 @@ async function deleteDevice(deviceId: string) {
 		body: { deviceId }
 	})
 		.then(() => {
-			refresh();
+			refresh({ dedupe: true });
 		})
 		.catch((err) => {
 			err.value = err.data;
@@ -74,7 +75,13 @@ onMounted(() => {
 			}, 5000);
 		}
 	});
+
+	refreshInterval.value = window.setInterval(() => {
+		refresh({ dedupe: true });
+	}, 5000);
 });
+
+onUnmounted(() => window.clearInterval(refreshInterval.value));
 </script>
 
 <template>
