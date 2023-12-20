@@ -169,14 +169,6 @@ onMounted(() => {
 		}
 	});
 
-	$socket.onopen = () => {
-		$socket.send(`${auth.value.userId}`);
-	};
-
-	$socket.onmessage = (e) => {
-		console.log(JSON.parse(e.data));
-	};
-
 	$socket.onclose = async (e) => {
 		await removeSession();
 		auth.value = {
