@@ -59,7 +59,7 @@ export default defineEventHandler(async (e) => {
 			chatId: true,
 			deviceId: true,
 			sender: {
-				select: { username: true }
+				select: { id: true, username: true }
 			}
 		}
 	});
