@@ -1,7 +1,9 @@
 <script setup lang="ts">
 const auth = useAuth();
-const { $socket } = useNuxtApp();
-const { session, refresh } = await useSession();
+const socket = useSocket();
+const { session, refresh } = await useSession({
+	fetchSessionOnInitialization: false
+});
 
 const username = ref("");
 const password = ref("");
@@ -20,7 +22,16 @@ onMounted(() => {
 			};
 
 			if (auth.value.authenticated) {
-				$socket.send(`${auth.value.userId}:${btoa(password.value)}`);
+				if (socket.value) {
+					socket.value.send(
+						JSON.stringify({
+							event: "auth",
+							mode: "post",
+							data: { userId: auth.value.userId, password: password.value }
+						} as SocketMessage<{ userId: string; password: string }>)
+					);
+				}
+
 				return navigateTo("/");
 			}
 		}
