@@ -29,7 +29,7 @@ export default defineEventHandler(async (e) => {
 	const oneWeekAgo = new Date(Date.now() - 604800000);
 	await prisma.device.deleteMany({ where: { lastUsed: { lte: oneWeekAgo } } });
 
-	return prisma.device.upsert({
+	const updatedDevice = prisma.device.upsert({
 		where: { key: body.key },
 		create: {
 			name: `${device.browser.name} ${device.os.name}`,
@@ -38,6 +38,14 @@ export default defineEventHandler(async (e) => {
 				connect: { id: userId }
 			}
 		},
-		update: { lastUsed: new Date() }
+		update: { lastUsed: new Date() },
+		select: {
+			id: true,
+			name: true,
+			key: true,
+			lastUsed: true
+		}
 	});
+
+	return updatedDevice;
 });
