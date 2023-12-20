@@ -1,6 +1,7 @@
 <script setup lang="ts">
 const auth = useAuth();
 const isOpen = useChatMenu();
+const { $socket } = useNuxtApp();
 const selectedChat = useChat();
 
 const userSearch = ref("");
@@ -16,11 +17,7 @@ interface RawChat {
 	}[];
 }
 
-const {
-	data: chats,
-	execute: getChats,
-	refresh: refreshChats
-} = await useLazyAsyncData(
+const { data: chats, execute: getChats } = await useLazyAsyncData(
 	"chats",
 	async () => {
 		const data = await $fetch("/api/chats");
@@ -89,7 +86,6 @@ async function newChat(user: string) {
 		body: { user }
 	})
 		.then(async (res) => {
-			await refreshChats({ dedupe: true });
 			isOpen.value = false;
 			if (res !== null) {
 				selectChat(await parseChat(res));
@@ -111,18 +107,26 @@ async function deleteChat(e: Event, id: string) {
 	}
 
 	await $fetch("/api/chats", { method: "delete", body: { id } });
-	await refreshChats({ dedupe: true });
 }
 
 onMounted(() => {
 	getUsers();
 	getChats();
 
-	interval.value = window.setInterval(() => {
-		if (auth.value.currentDevice) {
-			refreshChats({ dedupe: true });
+	$socket.addEventListener("message", async (e) => {
+		const message: SocketMessage<RawChat> = JSON.parse(e.data);
+
+		if (message.event !== "chat") return;
+
+		switch (message.mode) {
+			case "post":
+				chats.value?.unshift(await parseChat(message.data));
+				break;
+
+			case "delete":
+				break;
 		}
-	}, 5000);
+	});
 });
 
 onBeforeUnmount(() => {
