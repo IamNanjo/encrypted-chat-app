@@ -23,16 +23,25 @@ onMounted(() => {
 
 			if (auth.value.authenticated) {
 				if (socket.value) {
-					socket.value.send(
-						JSON.stringify({
-							event: "auth",
-							mode: "post",
-							data: { userId: auth.value.userId, password: password.value }
-						} as SocketMessage<{ userId: string; password: string }>)
-					);
-				}
+					const wsAuthenticate = (socket: WebSocket) => {
+						window.setTimeout(() => {
+							if (socket.readyState !== socket.OPEN)
+								return wsAuthenticate(socket);
 
-				return navigateTo("/");
+							socket.send(
+								JSON.stringify({
+									event: "auth",
+									mode: "post",
+									data: { userId: auth.value.userId, password: password.value }
+								} as SocketMessage<{ userId: string; password: string }>)
+							);
+
+							return navigateTo("/");
+						}, 100);
+					};
+
+					wsAuthenticate(socket.value);
+				}
 			}
 		}
 	});
