@@ -9,6 +9,11 @@ interface Clients {
 declare global {
 	var wss: WebSocketServer;
 	var clients: Clients;
+	interface SocketMessage<T> {
+		event: "auth" | "chat" | "message";
+		mode: "post" | "delete";
+		data: T;
+	}
 }
 
 let wss: WebSocketServer;
@@ -21,21 +26,36 @@ export default defineEventHandler((e) => {
 		wss.on("connection", (socket) => {
 			socket.on("message", async (rawMessage) => {
 				const message = rawMessage.toString();
-				if (!message.length || message.split(":").length < 2)
-					return socket.close(1003);
+				if (message.length < 2) return socket.close(1003);
 
-				const [userId, password] = message.split(":");
+				const socketMessage = JSON.parse(message) as SocketMessage<
+					| {
+							userId: string;
+							password: string;
+					  }
+					| undefined
+				>;
 
-				if (!userId || !password) return socket.close(1003);
+				if (
+					!socketMessage.event ||
+					!socketMessage.mode ||
+					socketMessage.event !== "auth" ||
+					socketMessage.mode !== "post" ||
+					!socketMessage.data ||
+					!socketMessage.data.password
+				) {
+					return socket.close(1000);
+				}
+
+				const { userId, password } = socketMessage.data;
+
+				if (!userId) return socket.close(1003);
 
 				const user = await prisma.user.findUnique({ where: { id: userId } });
 
 				if (!user) return socket.close();
 
-				const passwordMatches = await bcrypt.compare(
-					atob(password),
-					user.password
-				);
+				const passwordMatches = await bcrypt.compare(password, user.password);
 
 				if (!passwordMatches) return socket.close();
 
@@ -43,6 +63,10 @@ export default defineEventHandler((e) => {
 
 				if (!(user.id in global.clients)) global.clients[user.id] = [socket];
 				else global.clients[user.id].push(socket);
+
+				global.clients[user.id] = global.clients[user.id].filter(
+					(client) => client.readyState === client.OPEN
+				);
 
 				socket.send(
 					JSON.stringify({
