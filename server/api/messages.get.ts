@@ -7,6 +7,7 @@ export interface Message {
 	chatId: string;
 	deviceId: string;
 	sender: {
+		id: string;
 		username: string;
 	};
 }
@@ -40,7 +41,7 @@ export default defineEventHandler(async (e) => {
 			content: true,
 			created: true,
 			sender: {
-				select: { username: true }
+				select: { id: true, username: true }
 			}
 		}
 	});
