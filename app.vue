@@ -181,7 +181,6 @@ onMounted(() => {
 	}
 
 	watch(socket, (newSocket) => {
-		console.log(socket.value, newSocket);
 		if (!newSocket) return;
 
 		newSocket.addEventListener("message", async (e) => {
