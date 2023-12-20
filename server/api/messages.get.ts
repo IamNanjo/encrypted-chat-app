@@ -3,7 +3,9 @@ import { prisma } from "~/server/db";
 export interface Message {
 	id: string;
 	content: string;
-	created: string;
+	created: Date;
+	chatId: string;
+	deviceId: string;
 	sender: {
 		username: string;
 	};
