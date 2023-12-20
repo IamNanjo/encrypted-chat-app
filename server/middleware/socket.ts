@@ -19,7 +19,6 @@ export default defineEventHandler((e) => {
 			server: (e.node.res.socket as any)?.server
 		});
 		wss.on("connection", (socket) => {
-			socket.send("Connected");
 			socket.on("message", async (rawMessage) => {
 				const message = rawMessage.toString();
 				if (!message.length || message.split(":").length < 2)
@@ -46,7 +45,11 @@ export default defineEventHandler((e) => {
 				else global.clients[user.id].push(socket);
 
 				socket.send(
-					JSON.stringify({ content: `Authenticated as ${user.username}` })
+					JSON.stringify({
+						event: "auth",
+						mode: "post",
+						data: `Authenticated as ${user.username}`
+					})
 				);
 			});
 		});
