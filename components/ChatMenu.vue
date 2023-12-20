@@ -32,15 +32,12 @@ const {
 	}
 );
 
-const { data: users, execute: getUsers } = await useLazyAsyncData(
-	"users",
-	() => $fetch("/api/users", { query: { q: userSearch.value } }),
-	{
-		server: false,
-		immediate: false,
-		watch: [userSearch]
-	}
-);
+const { data: users, execute: getUsers } = await useLazyFetch("/api/users", {
+	server: false,
+	immediate: false,
+	query: { q: userSearch.value },
+	watch: [userSearch]
+});
 
 async function parseChat(rawChat: RawChat): Promise<Chat> {
 	let temp: Chat = { id: rawChat.id, members: [] };
