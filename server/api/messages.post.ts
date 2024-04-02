@@ -7,28 +7,22 @@ export default defineEventHandler(async (e) => {
   }
 
   const body = (await readBody(e)) as {
-    chat: string;
-    message: string;
-    deviceId: string;
+    chat?: Message["chatId"];
+    message?: Message["content"];
+    deviceId?: Message["deviceId"];
   } | null;
 
-  if (
-    !body ||
-    typeof body !== "object" ||
-    !("chat" in body) ||
-    !body.chat ||
-    !body.chat.toString()
-  ) {
+  if (!body || typeof body !== "object" || !("chat" in body) || !body.chat) {
     setResponseStatus(e, 400);
     return send(e, "No chat selected");
   }
 
-  if (!("message" in body) || !body.message || !body.message.toString()) {
+  if (!("message" in body) || !body.message) {
     setResponseStatus(e, 400);
     return send(e, "No message provided");
   }
 
-  if (!("deviceId" in body) || !body.deviceId || !body.deviceId.toString()) {
+  if (!("deviceId" in body) || !body.deviceId) {
     setResponseStatus(e, 400);
     return send(e, "No device ID provided");
   }
