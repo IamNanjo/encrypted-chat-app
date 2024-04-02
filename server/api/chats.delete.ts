@@ -10,7 +10,7 @@ export default defineEventHandler(async (e) => {
 
   if (!body || !body.id || !Number(body.id)) {
     setResponseStatus(e, 400);
-    return send(e, "No chat ID provided");
+    return "No chat ID provided";
   }
 
   const userId = Number(e.context.session.userId);
@@ -23,7 +23,7 @@ export default defineEventHandler(async (e) => {
   } finally {
     if (!chat) {
       setResponseStatus(e, 404);
-      return send(e, "Chat not found - possibly already deleted");
+      return "Chat not found - possibly already deleted";
     }
   }
 
@@ -64,5 +64,5 @@ export default defineEventHandler(async (e) => {
     }
   }
 
-  return await send(e);
+  return e;
 });
