@@ -6,9 +6,9 @@ export default defineEventHandler(async (e) => {
     return sendRedirect(e, "/login");
   }
 
-  const body = (await readBody(e)) as { id?: string } | null;
+  const body = (await readBody(e)) as { id?: number } | null;
 
-  if (!body || !body.id || typeof body.id !== "string") {
+  if (!body || !body.id || typeof body.id !== "number") {
     setResponseStatus(e, 400);
     return send(e, "No chat ID provided");
   }

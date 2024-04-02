@@ -18,17 +18,15 @@ export default defineEventHandler(async (e) => {
   }
 
   const body = (await readBody(e)) as {
-    chat?: string;
-    message?: string;
+    chat?: Message["chatId"];
+    message?: Message["id"];
   } | null;
 
   if (
     !body ||
     typeof body !== "object" ||
     Array.isArray(body) ||
-    !body.message ||
-    !String(body.chat) ||
-    !String(body.message)
+    !body.message
   ) {
     setResponseStatus(e, 400);
     return "You need to provide a chat ID and message ID";

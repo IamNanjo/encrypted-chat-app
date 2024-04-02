@@ -17,7 +17,10 @@ export default defineEventHandler(async (e) => {
     return await sendRedirect(e, "/login");
   }
 
-  const query = getQuery(e) as { chatId?: string; deviceId?: string };
+  const query = getQuery(e) as {
+    chatId?: Message["chatId"];
+    deviceId?: Message["deviceId"];
+  };
 
   const chatId = query.chatId;
   const deviceId = query.deviceId;

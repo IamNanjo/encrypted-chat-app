@@ -13,7 +13,7 @@ export default defineEventHandler(async (e) => {
   }
 
   const userId = Number(e.context.session.userId);
-  const body = (await readBody(e)) as { deviceId?: string } | null;
+  const body = (await readBody(e)) as { deviceId?: Device["id"] } | null;
 
   if (
     !body ||
