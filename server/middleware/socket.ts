@@ -3,7 +3,7 @@ import bcrypt from "bcrypt";
 import { prisma } from "~/server/db";
 
 interface Clients {
-  [id: string]: WebSocket[];
+  [id: number]: WebSocket[];
 }
 
 declare global {
