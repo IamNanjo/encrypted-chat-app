@@ -1,79 +1,82 @@
 import { prisma } from "~/server/db";
 
 interface Message {
-	id: string;
-	content: string;
-	created: Date;
-	chatId: string;
-	deviceId: string;
-	sender: {
-		id: string;
-		username: string;
-	};
+  id: number;
+  content: string;
+  created: Date;
+  chatId: number;
+  deviceId: number;
+  sender: {
+    id: number;
+    username: string;
+  };
 }
 
 export default defineEventHandler(async (e) => {
-	if (!("userId" in e.context.session)) {
-		return await sendRedirect(e, "/login");
-	}
+  if (!("userId" in e.context.session)) {
+    return await sendRedirect(e, "/login");
+  }
 
-	const body = (await readBody(e)) as {
-		chat?: string;
-		message?: string;
-	} | null;
+  const body = (await readBody(e)) as {
+    chat?: string;
+    message?: string;
+  } | null;
 
-	if (
-		!body ||
-		typeof body !== "object" ||
-		Array.isArray(body) ||
-		!body.message ||
-		!String(body.chat) ||
-		!String(body.message)
-	) {
-		setResponseStatus(e, 400);
-		return "You need to provide a chat ID and message ID";
-	}
+  if (
+    !body ||
+    typeof body !== "object" ||
+    Array.isArray(body) ||
+    !body.message ||
+    !String(body.chat) ||
+    !String(body.message)
+  ) {
+    setResponseStatus(e, 400);
+    return "You need to provide a chat ID and message ID";
+  }
 
-	const chat = await prisma.chat.findUnique({
-		where: { id: body.chat },
-		include: { members: true }
-	});
+  const chat = await prisma.chat.findUnique({
+    where: { id: Number(body.chat) },
+    include: { members: true },
+  });
 
-	if (!chat) {
-		setResponseStatus(e, 404);
-		return "Chat not found";
-	}
+  if (!chat) {
+    setResponseStatus(e, 404);
+    return "Chat not found";
+  }
 
-	const message = await prisma.message.delete({
-		where: { id: body.message, sender: { id: e.context.session.userId } },
-		select: {
-			id: true,
-			content: true,
-			created: true,
-			chatId: true,
-			deviceId: true,
-			sender: {
-				select: { id: true, username: true }
-			}
-		}
-	});
+  const message = await prisma.message.delete({
+    where: {
+      id: Number(body.message),
+      sender: { id: e.context.session.userId },
+    },
+    select: {
+      id: true,
+      content: true,
+      created: true,
+      chatId: true,
+      deviceId: true,
+      sender: {
+        select: { id: true, username: true },
+      },
+    },
+  });
 
-	for (const member of chat.members) {
-		if (!(member.id in global.clients)) continue;
+  for (const member of chat.members) {
+    if (!(member.id in global.clients)) continue;
 
-		for (const socket of global.clients[member.id]) {
-			if (socket.readyState !== socket.OPEN) continue;
+    for (const socket of global.clients[member.id]) {
+      if (socket.readyState !== socket.OPEN) continue;
 
-			socket.send(
-				JSON.stringify({
-					event: "message",
-					mode: "delete",
-					data: message
-				} as SocketMessage<Message>)
-			);
-		}
-	}
+      socket.send(
+        JSON.stringify({
+          event: "message",
+          mode: "delete",
+          data: message,
+        } as SocketMessage<Message>)
+      );
+    }
+  }
 
-	setResponseStatus(e, 204);
-	return message;
+  setResponseStatus(e, 204);
+  return message;
 });

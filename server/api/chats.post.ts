@@ -1,11 +1,11 @@
 import { prisma } from "~/server/db";
 
 export interface Chat {
-	id: string;
+	id: number;
 	members: {
-		id: string;
+		id: number;
 		username: string;
-		devices: { id: string; key: string }[];
+		devices: { id: number; key: string }[];
 	}[];
 }
 
