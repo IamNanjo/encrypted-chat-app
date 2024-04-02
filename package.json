@@ -17,7 +17,7 @@
     "@types/bcrypt": "^5.0.1",
     "@types/ua-parser-js": "^0.7.39",
     "@types/ws": "^8.5.10",
-    "nuxt": "^3.8.2",
+    "nuxt": "^3.11.1",
     "prisma": "latest",
     "vue": "^3.3.7",
     "vue-router": "^4.2.5"
