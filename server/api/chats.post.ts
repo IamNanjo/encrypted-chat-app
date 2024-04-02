@@ -30,17 +30,6 @@ export default defineEventHandler(async (e) => {
 
   const chatMemberIds = [e.context.session.userId, body.user];
 
-  const existingChat = await prisma.chat.findFirst({
-    where: {
-      members: {
-        every: {
-          id: { in: chatMemberIds },
-        },
-      },
-    },
-    include: { members: true },
-  });
-
   // Users are not the same for the existing chat and the new one
   if (
     existingChat &&
