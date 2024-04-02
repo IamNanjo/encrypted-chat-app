@@ -8,7 +8,7 @@ export default defineEventHandler(async (e) => {
 
   const body = (await readBody(e)) as { id?: number } | null;
 
-  if (!body || !body.id || typeof body.id !== "number") {
+  if (!body || !body.id) {
     setResponseStatus(e, 400);
     return send(e, "No chat ID provided");
   }
