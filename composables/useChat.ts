@@ -1,10 +1,10 @@
 export type Chat = {
-	id: string;
-	members: {
-		id: string;
-		username: string;
-		devices: { id: string; key: CryptoKey }[];
-	}[];
+  id: number;
+  members: {
+    id: number;
+    username: string;
+    devices: { id: number; key: CryptoKey }[];
+  }[];
 };
 
 export default () => useState<Chat | null>(() => null);
