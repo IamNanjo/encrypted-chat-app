@@ -1,12 +1,15 @@
-import { prisma } from "~/server/db";
+import db from "~/server/db";
+import getSession from "~/server/session";
 
 export default defineEventHandler(async (e) => {
-  if (!("userId" in e.context.session)) {
-    return await sendRedirect(e, "/login");
+  const session = await getSession(e);
+
+  if (!("userId" in session.data)) {
+    return sendRedirect(e, "/login");
   }
 
-  return prisma.chat.findMany({
-    where: { members: { some: { id: e.context.session.userId } } },
+  return db.chat.findMany({
+    where: { members: { some: { id: session.data.userId } } },
     orderBy: { created: "desc" },
     select: {
       id: true,

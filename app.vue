@@ -1,7 +1,4 @@
 <script setup lang="ts">
-const { remove: removeSession } = await useSession({
-  fetchSessionOnInitialization: false,
-});
 const socket = useSocket();
 const auth = useAuth();
 const keyPair = useKeyPair();
@@ -254,9 +251,9 @@ onMounted(() => {
 
 :root {
   color-scheme: light;
-  --bg-primary: hsl(0, 0%, 80%);
-  --bg-raise: rgba(0, 0, 0, 0.125);
-  --bg-raise-1: var(--bg-primary);
+  --bg-primary: #f7f7f7;
+  --bg-raise: #ffffff;
+  --bg-raise-1: #ffffff;
   --bg-raise-2: var(--bg-raise);
   --fg-primary: #ff6961;
   --text-primary: black;

@@ -1,8 +1,11 @@
-import { prisma } from "~/server/db";
+import db from "~/server/db";
+import getSession from "~/server/session";
 import type { Chat } from "./chats.post";
 
 export default defineEventHandler(async (e) => {
-  if (!("userId" in e.context.session)) {
+  const session = await getSession(e);
+
+  if (!("userId" in session.data)) {
     return sendRedirect(e, "/login");
   }
 
@@ -13,13 +16,13 @@ export default defineEventHandler(async (e) => {
     return "No chat ID provided";
   }
 
-  const userId = Number(e.context.session.userId);
+  const userId = Number(session.data.userId);
   const chatId = Number(body.id);
 
   let chat = null;
 
   try {
-    chat = await prisma.chat.findUnique({ where: { id: chatId } });
+    chat = await db.chat.findUnique({ where: { id: chatId } });
   } finally {
     if (!chat) {
       setResponseStatus(e, 404);
@@ -27,7 +30,7 @@ export default defineEventHandler(async (e) => {
     }
   }
 
-  chat = await prisma.chat.delete({
+  chat = await db.chat.delete({
     where: { id: chatId, members: { some: { id: userId } } },
     select: {
       id: true,

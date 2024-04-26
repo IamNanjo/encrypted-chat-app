@@ -1,6 +1,6 @@
 import WebSocket, { WebSocketServer } from "ws";
 import bcrypt from "bcrypt";
-import { prisma } from "~/server/db";
+import db from "~/server/db";
 
 interface Clients {
   [id: number]: WebSocket[];
@@ -51,7 +51,7 @@ export default defineEventHandler((e) => {
 
         if (!userId) return socket.close(1003);
 
-        const user = await prisma.user.findUnique({ where: { id: userId } });
+        const user = await db.user.findUnique({ where: { id: userId } });
 
         if (!user) return socket.close();
 

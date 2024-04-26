@@ -1,16 +1,24 @@
-export interface User {
+interface User {
   authenticated: boolean;
+}
+
+export interface UnAuthenticatedUser extends User {
+  authenticated: false;
+}
+
+export interface AuthenticatedUser extends User {
+  authenticated: true;
   userId: number;
   username: string;
   currentDevice: {
     id: number;
     name: string;
-    key: string;
+    key: CryptoKey;
     lastUsed: string;
   } | null;
 }
 
 export default () =>
-  useState<User>(() =>
-    ref({ authenticated: false, userId: 0, username: "", currentDevice: null })
+  useState(() =>
+    ref({ authenticated: false } as UnAuthenticatedUser | AuthenticatedUser)
   );

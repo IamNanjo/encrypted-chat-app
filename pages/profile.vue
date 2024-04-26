@@ -1,7 +1,4 @@
 <script setup lang="ts">
-const { remove: removeSession } = await useSession({
-  fetchSessionOnInitialization: false,
-});
 const auth = useAuth();
 const socket = useSocket();
 
@@ -35,7 +32,7 @@ async function handleSubmit() {
 
       // @ts-expect-error Compatible, but slightly different types
       profile.value = { ...profile.value, ...res };
-      auth.value.username = res.username;
+      if (auth.value.authenticated) auth.value.username = res.username;
     })
     .catch((err) => {
       err.value = err.data;
@@ -44,19 +41,11 @@ async function handleSubmit() {
 
 async function deleteUser() {
   $fetch("/api/user", { method: "DELETE" }).then(async () => {
-    if (socket.value) {
-      // Close socket
-      socket.value.send(
-        JSON.stringify({ event: "auth", mode: "delete" } as SocketMessage<any>)
-      );
-    }
-    await removeSession();
-    auth.value = {
-      authenticated: false,
-      userId: 0,
-      username: "",
-      currentDevice: null,
-    };
+    if (socket.value) socket.value.close();
+
+    await $fetch("/auth/logout", { method: "POST" });
+    auth.value = { authenticated: false };
+
     return await navigateTo("/login");
   });
 }
@@ -76,7 +65,7 @@ onMounted(() => {
   });
 
   watch(profile, (newProfile) => {
-    if (newProfile) {
+    if (newProfile && auth.value.authenticated) {
       auth.value.username = newProfile.username;
     }
   });

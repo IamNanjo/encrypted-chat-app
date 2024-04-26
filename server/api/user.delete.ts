@@ -1,11 +1,14 @@
-import { prisma } from "~/server/db";
+import db from "~/server/db";
+import getSession from "~/server/session";
 
 export default defineEventHandler(async (e) => {
-  if (!("userId" in e.context.session)) {
-    return sendRedirect(e, "/login");
-  }
+ const session = await getSession(e);
 
-  await prisma.user.delete({ where: { id: e.context.session.userId } });
+ if (!("userId" in session.data)) {
+   return sendRedirect(e, "/login");
+ }
+
+  await db.user.delete({ where: { id: session.data.userId } });
 
   e.context.session = null;
 

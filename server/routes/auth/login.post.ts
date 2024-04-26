@@ -1,7 +1,14 @@
-import { prisma } from "~/server/db";
+import db from "~/server/db";
+import getSession from "~/server/session";
 import bcrypt from "bcrypt";
 
 export default defineEventHandler(async (e) => {
+  const session = await getSession(e);
+
+  if (!("userId" in session.data)) {
+    return sendRedirect(e, "/login");
+  }
+
   const body = (await readBody(e)) as { username?: string; password?: string };
 
   // Will not happen in normal use as the fields are required
@@ -19,7 +26,7 @@ export default defineEventHandler(async (e) => {
   const username = body.username.toString();
   const password = body.password.toString();
 
-  const user = await prisma.user.findUnique({ where: { username } });
+  const user = await db.user.findUnique({ where: { username } });
 
   if (!user) {
     setResponseStatus(e, 404);
@@ -31,7 +38,7 @@ export default defineEventHandler(async (e) => {
     return await send(e, "Incorrect password");
   }
 
-  e.context.session.userId = user.id;
+  session.data.userId = user.id;
   e.context.session.username = user.username;
   return await send(e);
 });
