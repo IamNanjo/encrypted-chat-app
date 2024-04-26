@@ -1,4 +1,5 @@
-import { prisma } from "~/server/db";
+import db from "~/server/db";
+import getSession from "~/server/session";
 
 export interface Chat {
   id: number;
@@ -10,8 +11,10 @@ export interface Chat {
 }
 
 export default defineEventHandler(async (e) => {
-  if (!("userId" in e.context.session)) {
-    return await sendRedirect(e, "/login");
+  const session = await getSession(e);
+
+  if (!("userId" in session.data)) {
+    return sendRedirect(e, "/login");
   }
 
   const body = (await readBody(e)) as {
@@ -23,27 +26,15 @@ export default defineEventHandler(async (e) => {
     return send(e, "No user selected");
   }
 
-  if (body.user === e.context.session.userId) {
+  if (body.user === session.data.userId) {
     setResponseStatus(e, 400);
     return send(e, "You cannot start a chat with yourself");
   }
 
-  const chatMemberIds = [e.context.session.userId, body.user];
-
-  // Users are not the same for the existing chat and the new one
-  if (
-    existingChat &&
-    (existingChat.members.length === 2 ||
-      existingChat.members.every((member) => chatMemberIds.includes(member.id)))
-  ) {
-    setResponseStatus(e, 409);
-    return send(e, "Chat already exists");
-  }
-
-  const chat = await prisma.chat.create({
+  const chat = await db.chat.create({
     data: {
       members: {
-        connect: [{ id: e.context.session.userId }, { id: body.user }],
+        connect: [{ id: session.data.userId }, { id: body.user }],
       },
     },
     select: {

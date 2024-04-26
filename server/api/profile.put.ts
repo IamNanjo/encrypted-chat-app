@@ -1,10 +1,13 @@
-import { prisma } from "~/server/db";
+import db from "~/server/db";
+import getSession from "~/server/session";
 import bcrypt from "bcrypt";
 
 export default defineEventHandler(async (e) => {
-  if (!("userId" in e.context.session)) {
-    return await sendRedirect(e, "/login");
-  }
+ const session = await getSession(e);
+
+ if (!("userId" in session.data)) {
+   return sendRedirect(e, "/login");
+ }
 
   const body = (await readBody(e)) as {
     username?: string;
@@ -22,7 +25,7 @@ export default defineEventHandler(async (e) => {
     return "Username cannot be empty";
   }
 
-  const userExists = await prisma.user.count({
+  const userExists = await db.user.count({
     where: { username: body.username },
   });
 
@@ -36,8 +39,8 @@ export default defineEventHandler(async (e) => {
     return "Wrong current password";
   }
 
-  const user = await prisma.user.findUnique({
-    where: { id: e.context.session.userId },
+  const user = await db.user.findUnique({
+    where: { id: session.data.userId },
   });
 
   if (!user) {
@@ -56,16 +59,16 @@ export default defineEventHandler(async (e) => {
   }
 
   if (!body.newPassword) {
-    return prisma.user.update({
-      where: { id: e.context.session.userId },
+    return db.user.update({
+      where: { id: session.data.userId },
       data: { username: body.username },
     });
   }
 
   const newHash = await bcrypt.hash(body.newPassword, 12);
 
-  const profile = await prisma.user.update({
-    where: { id: e.context.session.userId },
+  const profile = await db.user.update({
+    where: { id: session.data.userId },
     data: {
       username: body.username,
       password: newHash,

@@ -1,9 +1,7 @@
 <script setup lang="ts">
 const auth = useAuth();
 const socket = useSocket();
-const { session, refresh } = await useSession({
-  fetchSessionOnInitialization: false,
-});
+const session = ref({ userId: 0, username: "" });
 
 const username = ref("");
 const password = ref("");
@@ -16,32 +14,32 @@ onMounted(() => {
     if (newSession !== null) {
       auth.value = {
         authenticated: "username" in newSession,
-        userId: newSession.userId || "",
+        userId: newSession.userId || 0,
         username: newSession.username || "",
         currentDevice: null,
       };
 
-      if (auth.value.authenticated) {
-        if (socket.value) {
-          const wsAuthenticate = (socket: WebSocket) => {
-            window.setTimeout(() => {
-              if (socket.readyState !== socket.OPEN)
-                return wsAuthenticate(socket);
+      if (auth.value.authenticated && socket.value) {
+        const wsAuthenticate = (socket: WebSocket) => {
+          window.setTimeout(() => {
+            if (socket.readyState !== socket.OPEN)
+              return wsAuthenticate(socket);
 
-              socket.send(
-                JSON.stringify({
-                  event: "auth",
-                  mode: "post",
-                  data: { userId: auth.value.userId, password: password.value },
-                } as SocketMessage<{ userId: number; password: string }>)
-              );
+            if (!auth.value.authenticated) return;
 
-              return navigateTo("/");
-            }, 100);
-          };
+            socket.send(
+              JSON.stringify({
+                event: "auth",
+                mode: "post",
+                data: { userId: auth.value.userId, password: password.value },
+              } as SocketMessage<{ userId: number; password: string }>)
+            );
 
-          wsAuthenticate(socket.value);
-        }
+            return navigateTo("/");
+          }, 100);
+        };
+
+        wsAuthenticate(socket.value);
       }
     }
   });
@@ -52,7 +50,7 @@ async function handleSubmit() {
     return (error.value = "You need to fill all the fields");
   }
 
-  await $fetch("/api/login", {
+  await $fetch("/auth/login", {
     method: "POST",
     body: {
       username: username.value,
@@ -61,8 +59,6 @@ async function handleSubmit() {
   }).catch((err) => {
     error.value = err.data;
   });
-
-  await refresh();
 }
 
 onMounted(() => {

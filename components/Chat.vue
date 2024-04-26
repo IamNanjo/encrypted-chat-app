@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { AuthenticatedUser } from "~/composables/useAuth";
+
 const auth = useAuth();
 const chat = useChat();
 const keyPair = useKeyPair();
@@ -22,6 +24,8 @@ const messages = ref<Message[]>([]);
 const { execute: getMessages } = await useLazyAsyncData(
   "messages",
   async () => {
+    if (!auth.value.authenticated) return [] as Message[];
+
     const data = await $fetch("/api/messages", {
       query: {
         chatId: chat.value?.id,
@@ -186,7 +190,7 @@ onMounted(() => {
   const onMessage = async (e: MessageEvent) => {
     const message: SocketMessage<Message> = JSON.parse(e.data);
 
-    if (message.event !== "message") return;
+    if (message.event !== "message" || !auth.value.authenticated) return;
 
     switch (message.mode) {
       case "post":
@@ -247,7 +251,7 @@ onMounted(() => {
             {{ getRelativeTime(message.created) }}
           </div>
           <Icon
-            v-if="auth.userId === message.sender.id"
+            v-if="(auth as AuthenticatedUser).userId === message.sender.id"
             class="clickable"
             name="material-symbols:delete-rounded"
             size="1.5em"

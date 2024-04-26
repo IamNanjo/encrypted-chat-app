@@ -22,7 +22,7 @@ const { data: chats } = await useLazyAsyncData(
     const data = await $fetch("/api/chats");
     return await parseChats(data);
   },
-  { server: false, default: () => [] }
+  { server: false, default: () => [] as Chat[] }
 );
 
 const { data: users } = await useLazyFetch("/api/users", {
@@ -167,7 +167,9 @@ onMounted(() => {
       >
         <span>{{
           chat.members
-            .filter((user) => user.username !== auth.username)
+            .filter(
+              (user) => user.username !== (auth as AuthenticatedUser).username
+            )
             .map((user) => user.username)
             .join(", ")
         }}</span>

@@ -1,4 +1,5 @@
-import { prisma } from "~/server/db";
+import db from "~/server/db";
+import getSession from "~/server/session";
 
 export interface Device {
   id: number;
@@ -8,11 +9,13 @@ export interface Device {
 }
 
 export default defineEventHandler(async (e) => {
-  if (!("userId" in e.context.session)) {
-    return await sendRedirect(e, "/login");
+  const session = await getSession(e);
+
+  if (!("userId" in session.data)) {
+    return sendRedirect(e, "/login");
   }
 
-  const userId = Number(e.context.session.userId);
+  const userId = Number(session.data.userId);
   const body = (await readBody(e)) as { deviceId?: Device["id"] } | null;
 
   if (
@@ -27,7 +30,7 @@ export default defineEventHandler(async (e) => {
 
   const deviceId = Number(body.deviceId);
 
-  const device = await prisma.device.delete({
+  const device = await db.device.delete({
     where: { id: Number(deviceId), userId },
     select: {
       id: true,

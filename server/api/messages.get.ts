@@ -1,4 +1,5 @@
-import { prisma } from "~/server/db";
+import db from "~/server/db";
+import getSession from "~/server/session";
 
 export interface Message {
   id: number;
@@ -13,9 +14,11 @@ export interface Message {
 }
 
 export default defineEventHandler(async (e) => {
-  if (!("userId" in e.context.session)) {
-    return await sendRedirect(e, "/login");
-  }
+ const session = await getSession(e);
+
+ if (!("userId" in session.data)) {
+   return sendRedirect(e, "/login");
+ }
 
   const query = getQuery(e) as {
     chatId?: Message["chatId"];
@@ -30,11 +33,11 @@ export default defineEventHandler(async (e) => {
     return [] as Message[];
   }
 
-  const messages = await prisma.message.findMany({
+  const messages = await db.message.findMany({
     where: {
       chat: {
         id: Number(chatId),
-        members: { some: { id: e.context.session.userId } },
+        members: { some: { id: session.data.userId } },
       },
       device: { id: Number(deviceId) },
     },

@@ -1,15 +1,18 @@
-import { prisma } from "~/server/db";
+import db from "~/server/db";
+import getSession from "~/server/session";
 import { UAParser } from "ua-parser-js";
 import type { Device } from "./device.delete";
 
 export default defineEventHandler(async (e) => {
-  if (!("userId" in e.context.session)) {
-    return await sendRedirect(e, "/login");
+  const session = await getSession(e);
+
+  if (!("userId" in session.data)) {
+    return sendRedirect(e, "/login");
   }
 
-  const userId = e.context.session.userId;
+  const userId = session.data.userId;
 
-  const user = await prisma.user.findUnique({ where: { id: userId } });
+  const user = await db.user.findUnique({ where: { id: userId } });
   if (!user) {
     e.context.session = null;
     setResponseStatus(e, 401);
@@ -28,9 +31,9 @@ export default defineEventHandler(async (e) => {
 
   // Delete devices that have not been used in 7 days
   const oneWeekAgo = new Date(Date.now() - 604800000);
-  await prisma.device.deleteMany({ where: { lastUsed: { lte: oneWeekAgo } } });
+  await db.device.deleteMany({ where: { lastUsed: { lte: oneWeekAgo } } });
 
-  const updatedDevice = await prisma.device.upsert({
+  const updatedDevice = await db.device.upsert({
     where: { key: body.key },
     create: {
       name: `${device.browser.name} ${device.os.name}`,

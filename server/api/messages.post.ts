@@ -1,9 +1,12 @@
-import { prisma } from "~/server/db";
+import db from "~/server/db";
+import getSession from "~/server/session";
 import type { Message } from "./messages.get";
 
 export default defineEventHandler(async (e) => {
-  if (!("userId" in e.context.session)) {
-    return await sendRedirect(e, "/login");
+  const session = await getSession(e);
+
+  if (!("userId" in session.data)) {
+    return sendRedirect(e, "/login");
   }
 
   const body = (await readBody(e)) as {
@@ -27,10 +30,10 @@ export default defineEventHandler(async (e) => {
     return send(e, "No device ID provided");
   }
 
-  const chat = await prisma.chat.findFirst({
+  const chat = await db.chat.findFirst({
     where: {
       id: Number(body.chat),
-      members: { some: { id: e.context.session.userId } },
+      members: { some: { id: session.data.userId } },
     },
   });
 
@@ -39,11 +42,11 @@ export default defineEventHandler(async (e) => {
     return send(e, "Chat not found");
   }
 
-  const message = await prisma.message.create({
+  const message = await db.message.create({
     data: {
       content: body.message,
       chatId: Number(body.chat),
-      userId: e.context.session.userId,
+      userId: session.data.userId,
       deviceId: Number(body.deviceId),
     },
     select: {
@@ -58,7 +61,7 @@ export default defineEventHandler(async (e) => {
     },
   });
 
-  const recipient = await prisma.device.findUnique({
+  const recipient = await db.device.findUnique({
     where: { id: Number(body.deviceId) },
     select: { userId: true },
   });

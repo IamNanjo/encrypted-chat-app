@@ -3,25 +3,13 @@ const route = useRoute();
 const theme = useColorMode();
 const auth = useAuth();
 const socket = useSocket();
-const { remove: removeSession } = await useSession({
-  fetchSessionOnInitialization: false,
-});
 
 async function logOut() {
-  if (socket.value) {
-    // Close socket
-    socket.value.send(
-      JSON.stringify({ event: "auth", mode: "delete" } as SocketMessage<any>)
-    );
-  }
+  if (socket.value) socket.value.close();
 
-  await removeSession();
-  auth.value = {
-    authenticated: false,
-    userId: 0,
-    username: "",
-    currentDevice: null,
-  };
+  await $fetch("/api/chats", { method: "POST" });
+  auth.value = { authenticated: false };
+
   return await navigateTo("/login");
 }
 </script>

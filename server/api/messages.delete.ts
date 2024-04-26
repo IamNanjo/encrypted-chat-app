@@ -1,4 +1,5 @@
-import { prisma } from "~/server/db";
+import db from "~/server/db";
+import getSession from "~/server/session";
 
 interface Message {
   id: number;
@@ -13,8 +14,10 @@ interface Message {
 }
 
 export default defineEventHandler(async (e) => {
-  if (!("userId" in e.context.session)) {
-    return await sendRedirect(e, "/login");
+  const session = await getSession(e);
+
+  if (!("userId" in session.data)) {
+    return sendRedirect(e, "/login");
   }
 
   const body = (await readBody(e)) as {
@@ -32,7 +35,7 @@ export default defineEventHandler(async (e) => {
     return "You need to provide a chat ID and message ID";
   }
 
-  const chat = await prisma.chat.findUnique({
+  const chat = await db.chat.findUnique({
     where: { id: Number(body.chat) },
     include: { members: true },
   });
@@ -42,10 +45,10 @@ export default defineEventHandler(async (e) => {
     return "Chat not found";
   }
 
-  const message = await prisma.message.delete({
+  const message = await db.message.delete({
     where: {
       id: Number(body.message),
-      sender: { id: e.context.session.userId },
+      sender: { id: session.data.userId },
     },
     select: {
       id: true,
