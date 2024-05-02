@@ -14,144 +14,25 @@ const { refresh: refreshDevice } = await useLazyAsyncData(
   }
 );
 
-function generateKeyPair() {
-  return crypto.subtle.generateKey(
-    {
-      name: "RSA-OAEP",
-      modulusLength: 4096,
-      publicExponent: new Uint8Array([1, 0, 1]),
-      hash: "SHA-512",
-    } as RsaHashedKeyGenParams,
-    true,
-    ["encrypt", "decrypt"]
-  ) as Promise<CryptoKeyPair>;
-}
-
-function getKeyPairFromLocalStorage() {
-  let storedKeyPair = localStorage.getItem(auth.value.userId.toString());
-
-  if (!storedKeyPair) {
-    const newKeys = generateKeyPair();
-
-    newKeys.then(({ privateKey, publicKey }) => {
-      Promise.all([
-        crypto.subtle.exportKey("jwk", privateKey),
-        crypto.subtle.exportKey("jwk", publicKey),
-      ]).then(([exportedPrivateKey, exportedPublicKey]) => {
-        localStorage.setItem(
-          auth.value.userId.toString(),
-          JSON.stringify({
-            privateKey: exportedPrivateKey,
-            publicKey: exportedPublicKey,
-          })
-        );
-
-        keyPair.value = {
-          privateKey,
-          publicKey,
-        };
-      });
-    });
-  } else {
-    const keys: { privateKey: JsonWebKey; publicKey: JsonWebKey } =
-      JSON.parse(storedKeyPair);
-
-    // Import private and public key concurrently
-    Promise.all([
-      crypto.subtle.importKey(
-        "jwk",
-        keys.privateKey,
-        { name: "RSA-OAEP", hash: "SHA-512" },
-        true,
-        ["decrypt"]
-      ),
-      crypto.subtle.importKey(
-        "jwk",
-        keys.publicKey,
-        { name: "RSA-OAEP", hash: "SHA-512" },
-        true,
-        ["encrypt"]
-      ),
-    ]).then(([privateKey, publicKey]) => {
-      keyPair.value = { privateKey, publicKey };
-    });
-  }
-}
-
-function getKeyPairFromIDB() {
-  const dbPromise = window.indexedDB.open("chatAppDB", 1);
-
-  dbPromise.onupgradeneeded = (e) => {
-    const db: IDBDatabase = (e.target as any).result;
-
-    const objectStore = db.createObjectStore("keyPairs", {
-      keyPath: "id",
-      autoIncrement: true,
-    });
-
-    objectStore.createIndex("userId", "userId", { unique: true });
-  };
-
-  dbPromise.onsuccess = (e) => {
-    const db: IDBDatabase = (e.target as any).result;
-    const transaction = db.transaction(["keyPairs"], "readonly");
-    const objectStore = transaction.objectStore("keyPairs");
-
-    const getRequest = objectStore
-      .index("userId")
-      .get(IDBKeyRange.only(auth.value.userId));
-
-    getRequest.onsuccess = () => {
-      if (getRequest.result === undefined) {
-        generateKeyPair().then((generatedKeyPair) => {
-          const transaction = db.transaction(["keyPairs"], "readwrite");
-          const objectStore = transaction.objectStore("keyPairs");
-          const addRequest = objectStore.add({
-            userId: auth.value.userId,
-            keyPair: generatedKeyPair,
-          });
-
-          keyPair.value = generatedKeyPair;
-
-          addRequest.onsuccess = () => db.close();
-          addRequest.onerror = () => db.close();
-        });
-      } else if (getRequest.result.keyPair) {
-        keyPair.value = getRequest.result.keyPair;
-      }
-    };
-  };
-
-  dbPromise.onerror = (e) => {
-    getKeyPairFromLocalStorage();
-  };
-}
-
 async function updateDevice() {
-  if (auth.value.authenticated && keyPair.value) {
-    const data = await $fetch("/api/device", {
-      method: "POST",
-      body: {
-        key: JSON.stringify(
-          await crypto.subtle.exportKey("jwk", keyPair.value.publicKey)
-        ),
-      },
-      retry: false,
-    }).catch(console.error);
+  if (!auth.value.authenticated || !keyPair.value) return;
 
-    if (data) auth.value.currentDevice = data;
-  }
+  const data = await $fetch("/api/device", {
+    method: "POST",
+    body: {
+      key: JSON.stringify(
+        await crypto.subtle.exportKey("jwk", keyPair.value.publicKey)
+      ),
+    },
+    retry: false,
+  }).catch(console.error);
+
+  if (!data) return;
+
+  auth.value.currentDevice = data.id;
 }
 
 onMounted(() => {
-  const unwatchAuth = watch(auth, (newAuth) => {
-    if (!newAuth.authenticated) return;
-    if (gotKeyPair.value) unwatchAuth();
-
-    if (window.indexedDB) getKeyPairFromIDB();
-    else getKeyPairFromLocalStorage();
-  });
-
   const unwatchKeyPair = watch(keyPair, (newKeyPair) => {
     if (newKeyPair) {
       refreshDevice();
@@ -170,6 +51,20 @@ onMounted(() => {
     const onClose = async () => {
       socket.value = new WebSocket(wsURL);
       socket.value.addEventListener("close", onClose);
+
+      const token = sessionStorage.getItem("jwt");
+
+      if (!token) return navigateTo("/login");
+
+      socket.value.addEventListener("open", () => {
+        socket.value!.send(
+          JSON.stringify({
+            event: "auth",
+            mode: "post",
+            data: token,
+          } as SocketMessage<string>)
+        );
+      });
     };
 
     socket.value.addEventListener("close", onClose);
@@ -180,28 +75,32 @@ onMounted(() => {
   watch(socket, (newSocket) => {
     if (!newSocket) return;
 
+    const token = sessionStorage.getItem("jwt");
+
+    if (token) {
+      newSocket.addEventListener("open", () => {
+        newSocket.send(
+          JSON.stringify({
+            event: "auth",
+            mode: "post",
+            data: token,
+          } as SocketMessage<string>)
+        );
+      });
+    }
+
     newSocket.addEventListener("message", async (e) => {
-      const message = JSON.parse(e.data) as SocketMessage<any>;
+      const { event, mode } = JSON.parse(e.data) as SocketMessage<any>;
 
-      if (message.event !== "auth" || message.mode !== "delete") return;
+      if (event !== "auth" || mode !== "delete") return;
 
-      await removeSession();
+      await $fetch("/auth/logout", { method: "POST" });
+      sessionStorage.removeItem("jwt");
       auth.value = {
         authenticated: false,
-        userId: 0,
-        username: "",
-        currentDevice: null,
       };
-    });
 
-    newSocket.addEventListener("close", async (e) => {
-      await removeSession();
-      auth.value = {
-        authenticated: false,
-        userId: 0,
-        username: "",
-        currentDevice: null,
-      };
+      navigateTo("/login");
     });
   });
 });
