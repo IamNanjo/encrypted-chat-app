@@ -113,7 +113,14 @@ onMounted(() => {
         break;
 
       case "delete":
-        chats.value = chats.value.filter((chat) => chat.id !== message.data.id);
+        chats.value = chats.value.filter((chat) => {
+          const keepChat = chat.id !== message.data.id;
+
+          if (!keepChat && selectedChat.value?.id === chat.id)
+            selectedChat.value = null;
+
+          return keepChat;
+        });
         break;
     }
   };
