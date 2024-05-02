@@ -1,49 +1,8 @@
 <script setup lang="ts">
-const auth = useAuth();
-const socket = useSocket();
-const session = ref({ userId: 0, username: "" });
-
 const username = ref("");
 const password = ref("");
 const error = ref("");
 const errorTimeout = ref(0);
-
-onMounted(() => {
-  // Check session status on page load and update auth state
-  watch(session, (newSession) => {
-    if (newSession !== null) {
-      auth.value = {
-        authenticated: "username" in newSession,
-        userId: newSession.userId || 0,
-        username: newSession.username || "",
-        currentDevice: null,
-      };
-
-      if (auth.value.authenticated && socket.value) {
-        const wsAuthenticate = (socket: WebSocket) => {
-          window.setTimeout(() => {
-            if (socket.readyState !== socket.OPEN)
-              return wsAuthenticate(socket);
-
-            if (!auth.value.authenticated) return;
-
-            socket.send(
-              JSON.stringify({
-                event: "auth",
-                mode: "post",
-                data: { userId: auth.value.userId, password: password.value },
-              } as SocketMessage<{ userId: number; password: string }>)
-            );
-
-            return navigateTo("/");
-          }, 100);
-        };
-
-        wsAuthenticate(socket.value);
-      }
-    }
-  });
-});
 
 async function handleSubmit() {
   if (!username.value || !password.value) {
@@ -56,19 +15,21 @@ async function handleSubmit() {
       username: username.value,
       password: password.value,
     },
-  }).catch((err) => {
-    error.value = err.data;
-  });
+  })
+    .then(handleAuthentication)
+    .catch((err) => {
+      error.value = err.data;
+    });
 }
 
 onMounted(() => {
   watch(error, (newError) => {
-    if (newError) {
-      window.clearTimeout(errorTimeout.value);
-      errorTimeout.value = window.setTimeout(() => {
-        error.value = "";
-      }, 5000);
-    }
+    if (!newError) return;
+
+    window.clearTimeout(errorTimeout.value);
+    errorTimeout.value = window.setTimeout(() => {
+      error.value = "";
+    }, 5000);
   });
 });
 </script>
