@@ -40,14 +40,7 @@ async function handleSubmit() {
 }
 
 async function deleteUser() {
-  $fetch("/api/user", { method: "DELETE" }).then(async () => {
-    if (socket.value) socket.value.close();
-
-    await $fetch("/auth/logout", { method: "POST" });
-    auth.value = { authenticated: false };
-
-    return await navigateTo("/login");
-  });
+  $fetch("/api/user", { method: "DELETE" }).then(logOut);
 }
 
 async function deleteDevice(deviceId: number) {
@@ -171,8 +164,9 @@ onMounted(() => {
                 :key="device.id"
                 v-for="device in profile?.devices"
                 :class="
+                  auth.authenticated &&
                   auth.currentDevice !== null &&
-                  device.id === auth.currentDevice.id &&
+                  device.id === auth.currentDevice &&
                   'current-device'
                 "
               >
@@ -184,8 +178,9 @@ onMounted(() => {
                   <button
                     @click="() => deleteDevice(device.id)"
                     :disabled="
+                      auth.authenticated &&
                       auth.currentDevice !== null &&
-                      device.id === auth.currentDevice.id
+                      device.id === auth.currentDevice
                     "
                   >
                     <Icon name="material-symbols:delete-rounded" size="1.5em" />
