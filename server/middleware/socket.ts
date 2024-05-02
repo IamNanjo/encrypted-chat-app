@@ -1,6 +1,5 @@
 import WebSocket, { WebSocketServer } from "ws";
-import bcrypt from "bcrypt";
-import db from "~/server/db";
+import { verifyJWT } from "~/server/session";
 
 interface Clients {
   [id: number]: WebSocket[];
@@ -29,11 +28,7 @@ export default defineEventHandler((e) => {
         if (message.length < 2) return socket.close(1003);
 
         const socketMessage = JSON.parse(message) as SocketMessage<
-          | {
-              userId: number;
-              password: string;
-            }
-          | undefined
+          string | undefined
         >;
 
         if (
@@ -41,30 +36,23 @@ export default defineEventHandler((e) => {
           !socketMessage.mode ||
           socketMessage.event !== "auth" ||
           socketMessage.mode !== "post" ||
-          !socketMessage.data ||
-          !socketMessage.data.password
+          !socketMessage.data
         ) {
           return socket.close(1000);
         }
 
-        const { userId, password } = socketMessage.data;
-
-        if (!userId) return socket.close(1003);
-
-        const user = await db.user.findUnique({ where: { id: userId } });
+        const token = socketMessage.data;
+        const user = verifyJWT(token);
 
         if (!user) return socket.close();
 
-        const passwordMatches = await bcrypt.compare(password, user.password);
-
-        if (!passwordMatches) return socket.close();
-
         if (!global.clients) global.clients = {};
 
-        if (!(user.id in global.clients)) global.clients[user.id] = [socket];
-        else global.clients[user.id].push(socket);
+        if (!(user.userId in global.clients))
+          global.clients[user.userId] = [socket];
+        else global.clients[user.userId].push(socket);
 
-        global.clients[user.id] = global.clients[user.id].filter(
+        global.clients[user.userId] = global.clients[user.userId].filter(
           (client) => client.readyState === client.OPEN
         );
 

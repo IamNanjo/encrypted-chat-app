@@ -1,5 +1,5 @@
 import db from "~/server/db";
-import getSession from "~/server/session";
+import {getSession} from "~/server/session";
 import { UAParser } from "ua-parser-js";
 import type { Device } from "./device.delete";
 
@@ -23,7 +23,7 @@ export default defineEventHandler(async (e) => {
 
   if (!body || !("key" in body) || !body.key) {
     setResponseStatus(e, 400);
-    return await send(e, "Public key missing from the request");
+    return send(e, "Public key missing from the request");
   }
 
   // Get device information for the device name
