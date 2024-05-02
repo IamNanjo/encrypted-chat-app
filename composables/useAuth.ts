@@ -8,14 +8,10 @@ export interface UnAuthenticatedUser extends User {
 
 export interface AuthenticatedUser extends User {
   authenticated: true;
+  token: string;
   userId: number;
   username: string;
-  currentDevice: {
-    id: number;
-    name: string;
-    key: CryptoKey;
-    lastUsed: string;
-  } | null;
+  currentDevice: number | null;
 }
 
 export default () =>
