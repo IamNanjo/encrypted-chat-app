@@ -1,44 +1,36 @@
-import db from "~/server/db";
-import getSession from "~/server/session";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import z from "zod";
+import db from "~/server/db";
+import { secret, getExpiration, getSession } from "~/server/session";
 
 export default defineEventHandler(async (e) => {
-  const session = await getSession(e);
-
-  if (!("userId" in session.data)) {
-    return sendRedirect(e, "/login");
-  }
-
-  const body = (await readBody(e)) as { username?: string; password?: string };
-
-  // Will not happen in normal use as the fields are required
-  if (
-    !body ||
-    !("username" in body) ||
-    !("password" in body) ||
-    !body.username ||
-    !body.password
-  ) {
-    setResponseStatus(e, 400);
-    return await send(e, "Username or password missing from request body");
-  }
-
-  const username = body.username.toString();
-  const password = body.password.toString();
+  const { username, password } = await readValidatedBody(
+    e,
+    z.object({ username: z.string().min(1), password: z.string().min(1) }).parse
+  );
 
   const user = await db.user.findUnique({ where: { username } });
 
   if (!user) {
     setResponseStatus(e, 404);
-    return await send(e, "User not found");
+    return send(e, "User not found");
   }
 
   if (!(await bcrypt.compare(password, user.password))) {
     setResponseStatus(e, 401);
-    return await send(e, "Incorrect password");
+    return send(e, "Incorrect password");
   }
 
-  session.data.userId = user.id;
-  e.context.session.username = user.username;
-  return await send(e);
+  const sessionData = { userId: user.id, username: user.username };
+
+  const token = jwt.sign(sessionData, secret, {
+    algorithm: "HS512",
+    expiresIn: getExpiration().expirationTime,
+  });
+
+  const session = await getSession(e);
+
+  await session.update(sessionData);
+  return { token, userId: user.id, username };
 });

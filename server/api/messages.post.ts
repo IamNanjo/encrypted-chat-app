@@ -1,5 +1,5 @@
 import db from "~/server/db";
-import getSession from "~/server/session";
+import {getSession} from "~/server/session";
 import type { Message } from "./messages.get";
 
 export default defineEventHandler(async (e) => {

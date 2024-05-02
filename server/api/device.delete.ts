@@ -1,5 +1,5 @@
 import db from "~/server/db";
-import getSession from "~/server/session";
+import {getSession} from "~/server/session";
 
 export interface Device {
   id: number;
