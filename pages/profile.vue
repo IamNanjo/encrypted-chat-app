@@ -53,6 +53,8 @@ async function deleteDevice(deviceId: number) {
 }
 
 onMounted(() => {
+  refreshNuxtData("updateDevice");
+
   watch(auth, (newAuth) => {
     if (!newAuth.authenticated) return navigateTo("/login");
   });
