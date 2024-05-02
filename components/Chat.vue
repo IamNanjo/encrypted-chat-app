@@ -24,12 +24,14 @@ const messages = ref<Message[]>([]);
 const { execute: getMessages } = await useLazyAsyncData(
   "messages",
   async () => {
-    if (!auth.value.authenticated) return [] as Message[];
+    if (!auth.value.authenticated || !auth.value.currentDevice || !chat.value) {
+      return navigateTo("/login");
+    }
 
     const data = await $fetch("/api/messages", {
       query: {
-        chatId: chat.value?.id,
-        deviceId: auth.value.currentDevice?.id,
+        chatId: chat.value.id,
+        deviceId: auth.value.currentDevice,
       },
     });
 
@@ -72,9 +74,6 @@ function scrollToBottom() {
 
 async function sendMessage() {
   if (!chat.value || !newMessage.value) return;
-
-  if (!keyPair.value || !keyPair.value.publicKey)
-    return reloadNuxtApp({ force: true });
 
   const encoder = new TextEncoder();
 
@@ -198,7 +197,7 @@ onMounted(() => {
           !auth.value.currentDevice ||
           !chat.value ||
           chat.value.id !== message.data.chatId ||
-          message.data.deviceId !== auth.value.currentDevice.id
+          message.data.deviceId !== auth.value.currentDevice
         )
           break;
 
@@ -219,7 +218,7 @@ onMounted(() => {
           !auth.value.currentDevice ||
           !chat.value ||
           chat.value.id !== message.data.chatId ||
-          message.data.deviceId !== auth.value.currentDevice.id
+          message.data.deviceId !== auth.value.currentDevice
         )
           break;
 
@@ -263,7 +262,7 @@ onMounted(() => {
         </div>
       </div>
     </div>
-    <form class="chat__new-message" @submit.prevent="sendMessage">
+    <form class="chat__new-message" @submit.prevent="sendMessage" method="post">
       <textarea
         required
         :disabled="!chat || !chat.id"
