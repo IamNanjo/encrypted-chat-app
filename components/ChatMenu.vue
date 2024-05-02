@@ -25,11 +25,14 @@ const { data: chats } = await useLazyAsyncData(
   { server: false, default: () => [] as Chat[] }
 );
 
-const { data: users } = await useLazyFetch("/api/users", {
-  server: false,
-  query: { q: userSearch.value },
-  watch: [userSearch],
-});
+const { data: users, refresh: refreshUsers } = await useLazyFetch(
+  "/api/users",
+  {
+    server: false,
+    query: { q: userSearch.value },
+    watch: [userSearch],
+  }
+);
 
 async function parseChat(rawChat: RawChat): Promise<Chat> {
   let temp: Chat = { id: rawChat.id, members: [] };
@@ -44,13 +47,7 @@ async function parseChat(rawChat: RawChat): Promise<Chat> {
     });
 
     for (const device of member.devices) {
-      const parsedKey = await crypto.subtle.importKey(
-        "jwk",
-        JSON.parse(device.key),
-        { name: "RSA-OAEP", hash: "SHA-512" },
-        true,
-        ["encrypt"]
-      );
+      const parsedKey = await importKey(JSON.parse(device.key), "encrypt");
 
       temp.members[i].devices.push({ id: device.id, key: parsedKey });
     }
@@ -70,6 +67,7 @@ async function parseChats(rawChats: RawChat[]): Promise<Chat[]> {
 }
 
 function showUserSelect() {
+  refreshUsers();
   const modal = document.getElementById("new-chat__modal") as HTMLDialogElement;
   modal.showModal();
 }
