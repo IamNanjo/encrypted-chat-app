@@ -9,7 +9,7 @@ declare global {
   var wss: WebSocketServer;
   var clients: Clients;
   interface SocketMessage<T> {
-    event: "auth" | "chat" | "message" | "device";
+    event: "ping" | "auth" | "chat" | "message" | "device";
     mode: "post" | "delete";
     data: T;
   }
@@ -23,13 +23,30 @@ export default defineEventHandler((e) => {
       server: (e.node.res.socket as any)?.server,
     });
     wss.on("connection", (socket) => {
+      // Ping the client to keep the socket open
+      const pingInterval = setInterval(() => {
+        socket.send(
+          JSON.stringify({
+            event: "ping",
+            mode: "post",
+            data: null,
+          } as SocketMessage<null>)
+        );
+      }, 30000);
+
+      socket.on("close", async () => clearInterval(pingInterval));
+
       socket.on("message", async (rawMessage) => {
         const message = rawMessage.toString();
-        if (message.length < 2) return socket.close(1003);
+        let socketMessage = null;
 
-        const socketMessage = JSON.parse(message) as SocketMessage<
-          string | undefined
-        >;
+        try {
+          socketMessage = JSON.parse(message) as SocketMessage<
+            string | undefined
+          >;
+        } catch {
+          return socket.close(1003);
+        }
 
         if (
           !socketMessage.event ||
