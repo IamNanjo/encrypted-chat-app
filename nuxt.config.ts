@@ -19,7 +19,7 @@ export default defineNuxtConfig({
     classSuffix: "",
     storageKey: "theme",
     fallback: "dark",
-    preference: "dark",
+    preference: "system",
   },
   plausible: { apiHost: "https://plausible.nanjo.tech" },
   googleFonts: {
