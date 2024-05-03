@@ -3,8 +3,6 @@ const socket = useSocket();
 const auth = useAuth();
 const keyPair = useKeyPair();
 
-const gotKeyPair = ref(false);
-
 const { refresh: refreshDevice } = await useLazyAsyncData(
   "updateDevice",
   updateDevice,
@@ -20,9 +18,7 @@ async function updateDevice() {
   const data = await $fetch("/api/device", {
     method: "POST",
     body: {
-      key: JSON.stringify(
-        await crypto.subtle.exportKey("jwk", keyPair.value.publicKey)
-      ),
+      key: JSON.stringify(await exportKey(keyPair.value.publicKey)),
     },
     retry: false,
   }).catch(console.error);
@@ -46,15 +42,26 @@ onMounted(() => {
       window.location.protocol === "https:" ? "wss://" : "ws://";
     const wsURL = `${wsProtocol}${window.location.host}`;
 
-    socket.value = new WebSocket(wsURL);
-
-    const onClose = async () => {
+    const startConnection = async () => {
       socket.value = new WebSocket(wsURL);
-      socket.value.addEventListener("close", onClose);
+      socket.value.addEventListener("close", startConnection);
 
-      const token = sessionStorage.getItem("jwt");
+      if (!auth.value.authenticated) return navigateTo("/login");
 
-      if (!token) return navigateTo("/login");
+      const token = auth.value.token;
+
+      socket.value.addEventListener("message", async (e) => {
+        const { event, mode } = JSON.parse(e.data) as SocketMessage<any>;
+
+        if (event !== "auth" || mode !== "delete") return;
+
+        await Promise.all([
+          $fetch("/auth/logout", { method: "POST" }),
+          logOut(),
+        ]);
+
+        navigateTo("/login");
+      });
 
       socket.value.addEventListener("open", () => {
         socket.value!.send(
@@ -67,42 +74,12 @@ onMounted(() => {
       });
     };
 
-    socket.value.addEventListener("close", onClose);
-
-    return;
-  }
-
-  watch(socket, (newSocket) => {
-    if (!newSocket) return;
-
-    const token = sessionStorage.getItem("jwt");
-
-    if (token) {
-      newSocket.addEventListener("open", () => {
-        newSocket.send(
-          JSON.stringify({
-            event: "auth",
-            mode: "post",
-            data: token,
-          } as SocketMessage<string>)
-        );
+    if (!auth.value.authenticated) {
+      watch(auth, (newAuth) => {
+        if (newAuth) startConnection();
       });
-    }
-
-    newSocket.addEventListener("message", async (e) => {
-      const { event, mode } = JSON.parse(e.data) as SocketMessage<any>;
-
-      if (event !== "auth" || mode !== "delete") return;
-
-      await $fetch("/auth/logout", { method: "POST" });
-      sessionStorage.removeItem("jwt");
-      auth.value = {
-        authenticated: false,
-      };
-
-      navigateTo("/login");
-    });
-  });
+    } else startConnection();
+  }
 });
 </script>
 

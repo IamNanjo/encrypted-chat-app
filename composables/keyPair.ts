@@ -27,23 +27,22 @@ function getKeyPairFromLocalStorage(auth: AuthenticatedUser) {
     const newKeys = generateKeyPair();
 
     newKeys.then(({ privateKey, publicKey }) => {
-      Promise.all([
-        crypto.subtle.exportKey("jwk", privateKey),
-        crypto.subtle.exportKey("jwk", publicKey),
-      ]).then(([exportedPrivateKey, exportedPublicKey]) => {
-        localStorage.setItem(
-          auth.userId.toString(),
-          JSON.stringify({
-            privateKey: exportedPrivateKey,
-            publicKey: exportedPublicKey,
-          })
-        );
+      Promise.all([exportKey(privateKey), exportKey(publicKey)]).then(
+        ([exportedPrivateKey, exportedPublicKey]) => {
+          localStorage.setItem(
+            auth.userId.toString(),
+            JSON.stringify({
+              privateKey: exportedPrivateKey,
+              publicKey: exportedPublicKey,
+            })
+          );
 
-        keyPair.value = {
-          privateKey,
-          publicKey,
-        };
-      });
+          keyPair.value = {
+            privateKey,
+            publicKey,
+          };
+        }
+      );
     });
   } else {
     const keys: { privateKey: JsonWebKey; publicKey: JsonWebKey } =
