@@ -1,8 +1,7 @@
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
 import z from "zod";
-import db from "~/server/db";
-import { secret, getExpiration, getSession } from "~/server/session";
+import db, { User, sql, eq } from "~/server/db";
+import { getSession, signJWT } from "~/server/session";
 
 export default defineEventHandler(async (e) => {
   const { username, password } = await readValidatedBody(
@@ -10,30 +9,26 @@ export default defineEventHandler(async (e) => {
     z.object({ username: z.string().min(1), password: z.string().min(1) }).parse
   );
 
-  const userExists = !!(await db.user.count({
-    where: { username },
-  }));
+  const userExists = !!db
+    .select({ count: sql`count(id)` })
+    .from(User)
+    .where(eq(User.username, username))
+    .get()?.count;
 
   if (userExists) {
     setResponseStatus(e, 409);
-    return send(e, "A user with this username already exists");
+    return "A user with this username already exists";
   }
 
   const hash = await bcrypt.hash(password, 12);
 
-  const user = await db.user.create({
-    data: { username, password: hash },
-  });
+  const userId = (await db.insert(User).values({ username, password: hash }))
+    .lastInsertRowid as number;
 
-  const sessionData = { userId: user.id, username: user.username };
+  const sessionData = { userId, username };
 
-  const token = jwt.sign(sessionData, secret, {
-    algorithm: "HS512",
-    expiresIn: getExpiration().expirationTime,
-  });
+  const token = signJWT(sessionData);
 
-  const session = await getSession(e);
-
-  await session.update(sessionData);
-  return { token, userId: user.id, username };
+  await (await getSession(e)).update(sessionData);
+  return { ...sessionData, token };
 });

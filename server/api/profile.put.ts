@@ -1,33 +1,32 @@
-import db from "~/server/db";
-import {getSession} from "~/server/session";
+import z from "zod";
 import bcrypt from "bcrypt";
+import db, { User, sql, eq } from "~/server/db";
+import { getSession } from "~/server/session";
+import { getProfileWithDevices } from "~/server/api/profile.get";
 
 export default defineEventHandler(async (e) => {
- const session = await getSession(e);
+  const session = await getSession(e);
 
- if (!("userId" in session.data)) {
-   return sendRedirect(e, "/login");
- }
-
-  const body = (await readBody(e)) as {
-    username?: string;
-    currentPassword?: string;
-    newPassword?: string;
-  };
-
-  if (!body || typeof body !== "object" || Array.isArray(body)) {
-    setResponseStatus(e, 400);
-    return "Wrong request body format";
+  if (!("userId" in session.data)) {
+    return sendRedirect(e, "/login");
   }
 
-  if (!("username" in body)) {
-    setResponseStatus(e, 400);
-    return "Username cannot be empty";
-  }
+  const body = await readValidatedBody(
+    e,
+    z.object({
+      username: z.string({ message: "Username cannot be empty" }).min(1),
+      currentPassword: z
+        .string({ message: "Current password cannot be empty" })
+        .min(1),
+      newPassword: z.string(),
+    }).parse
+  );
 
-  const userExists = await db.user.count({
-    where: { username: body.username },
-  });
+  const userExists = !!db
+    .select({ count: sql`count(id)` })
+    .from(User)
+    .where(eq(User.username, body.username))
+    .get()?.count;
 
   if (userExists) {
     setResponseStatus(e, 409);
@@ -39,9 +38,9 @@ export default defineEventHandler(async (e) => {
     return "Wrong current password";
   }
 
-  const user = await db.user.findUnique({
-    where: { id: session.data.userId },
-  });
+  const isCurrentUser = eq(User.id, session.data.userId);
+
+  const user = db.select().from(User).where(isCurrentUser).get();
 
   if (!user) {
     e.context.session = null;
@@ -59,33 +58,17 @@ export default defineEventHandler(async (e) => {
   }
 
   if (!body.newPassword) {
-    return db.user.update({
-      where: { id: session.data.userId },
-      data: { username: body.username },
-    });
+    return db
+      .update(User)
+      .set({ username: body.username })
+      .where(isCurrentUser)
+      .returning()
+      .get();
   }
 
   const newHash = await bcrypt.hash(body.newPassword, 12);
 
-  const profile = await db.user.update({
-    where: { id: session.data.userId },
-    data: {
-      username: body.username,
-      password: newHash,
-    },
-    select: {
-      id: true,
-      username: true,
-      created: true,
-      devices: {
-        select: {
-          id: true,
-          name: true,
-          lastUsed: true,
-        },
-      },
-    },
-  });
+  db.update(User).set({ username: body.username, password: newHash }).run();
 
-  return profile;
+  return getProfileWithDevices(session.data.userId);
 });

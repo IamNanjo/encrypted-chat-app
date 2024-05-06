@@ -1,17 +1,6 @@
-import db from "~/server/db";
-import {getSession} from "~/server/session";
-
-interface Message {
-  id: number;
-  content: string;
-  created: Date;
-  chatId: number;
-  deviceId: number;
-  sender: {
-    id: number;
-    username: string;
-  };
-}
+import z from "zod";
+import db, { Chat, Message, User, and, eq } from "~/server/db";
+import { getSession } from "~/server/session";
 
 export default defineEventHandler(async (e) => {
   const session = await getSession(e);
@@ -20,24 +9,21 @@ export default defineEventHandler(async (e) => {
     return sendRedirect(e, "/login");
   }
 
-  const body = (await readBody(e)) as {
-    chat?: Message["chatId"];
-    message?: Message["id"];
-  } | null;
+  const body = await readValidatedBody(
+    e,
+    z.object({
+      chat: z.number({
+        message: "You need to provide a chat ID",
+      }),
+      message: z.number({
+        message: "You need to provide a message ID",
+      }),
+    }).parse
+  );
 
-  if (
-    !body ||
-    typeof body !== "object" ||
-    Array.isArray(body) ||
-    !body.message
-  ) {
-    setResponseStatus(e, 400);
-    return "You need to provide a chat ID and message ID";
-  }
-
-  const chat = await db.chat.findUnique({
-    where: { id: Number(body.chat) },
-    include: { members: true },
+  const chat = await db.query.Chat.findFirst({
+    where: eq(Chat.id, body.chat),
+    with: { members: { columns: { userId: true } } },
   });
 
   if (!chat) {
@@ -45,27 +31,22 @@ export default defineEventHandler(async (e) => {
     return "Chat not found";
   }
 
-  const message = await db.message.delete({
-    where: {
-      id: Number(body.message),
-      sender: { id: session.data.userId },
-    },
-    select: {
-      id: true,
-      content: true,
-      created: true,
-      chatId: true,
-      deviceId: true,
-      sender: {
-        select: { id: true, username: true },
-      },
-    },
-  });
+  const message = db
+    .delete(Message)
+    .where(
+      and(eq(Message.id, body.message), eq(Message.userId, session.data.userId))
+    )
+    .returning({ id: Message.id })
+    .get();
+
+  if (!message) {
+    return setResponseStatus(e, 404, "Message not found");
+  }
 
   for (const member of chat.members) {
-    if (!(member.id in global.clients)) continue;
+    if (!(member.userId in global.clients)) continue;
 
-    for (const socket of global.clients[member.id]) {
+    for (const socket of global.clients[member.userId]) {
       if (socket.readyState !== socket.OPEN) continue;
 
       socket.send(
@@ -73,7 +54,7 @@ export default defineEventHandler(async (e) => {
           event: "message",
           mode: "delete",
           data: message,
-        } as SocketMessage<Message>)
+        } as SocketMessage<typeof message>)
       );
     }
   }

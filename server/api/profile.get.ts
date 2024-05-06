@@ -1,5 +1,17 @@
-import db from "~/server/db";
-import {getSession} from "~/server/session";
+import db, { User, Device, eq, desc } from "~/server/db";
+import { getSession } from "~/server/session";
+
+export function getProfileWithDevices(userId: number) {
+  return db.query.User.findFirst({
+    where: eq(User.id, userId),
+    columns: { id: true, username: true, created: true },
+    with: {
+      devices: {
+        columns: { id: true, name: true, lastUsed: true },
+      },
+    },
+  });
+}
 
 export default defineEventHandler(async (e) => {
   const session = await getSession(e);
@@ -8,20 +20,5 @@ export default defineEventHandler(async (e) => {
     return sendRedirect(e, "/login");
   }
 
-  return db.user.findUnique({
-    where: { id: session.data.userId },
-    select: {
-      id: true,
-      username: true,
-      created: true,
-      devices: {
-        orderBy: { lastUsed: "desc" },
-        select: {
-          id: true,
-          name: true,
-          lastUsed: true,
-        },
-      },
-    },
-  });
+  return getProfileWithDevices(session.data.userId);
 });

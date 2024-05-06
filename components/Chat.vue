@@ -1,22 +1,8 @@
 <script setup lang="ts">
-import type { AuthenticatedUser } from "~/composables/useAuth";
-
 const auth = useAuth();
 const chat = useChat();
 const keyPair = useKeyPair();
 const socket = useSocket();
-
-interface Message {
-  id: number;
-  content: string;
-  created: string;
-  chatId: number;
-  deviceId: number;
-  sender: {
-    id: number;
-    username: string;
-  };
-}
 
 const newMessage = ref("");
 const messages = ref<Message[]>([]);
@@ -86,7 +72,7 @@ async function sendMessage() {
 
       const encryptedMessage = await encryptMessage(
         device.key,
-        encoder.encode(newMessage.value)
+        encoder.encode(newMessage.value).buffer as ArrayBuffer
       );
 
       await $fetch("/api/messages", {
@@ -152,7 +138,7 @@ const encryptMessage = async (key: CryptoKey, plaintext: ArrayBuffer) => {
 
 async function decryptMessage(encryptedContent: string) {
   if (!keyPair.value) {
-    reloadNuxtApp({ force: true, persistState: true });
+    reloadNuxtApp();
     return null;
   }
 
@@ -164,7 +150,7 @@ async function decryptMessage(encryptedContent: string) {
     encryptedUint8Array[i] = encryptedContent.charCodeAt(i);
   }
 
-  const cipherTextBuffer = encryptedUint8Array.buffer;
+  const cipherTextBuffer = encryptedUint8Array.buffer as ArrayBuffer;
 
   return crypto.subtle
     .decrypt({ name: "RSA-OAEP" }, keyPair.value.privateKey, cipherTextBuffer)
@@ -207,26 +193,27 @@ onMounted(() => {
           ? decoder.decode(decryptedMessage)
           : message.data.content;
         messages.value = [...messages.value, message.data];
-        messages.value = messages.value.sort(
-          (a, b) => Number(a.created) - Number(b.created)
+        messages.value.sort(
+          (a, b) =>
+            new Date(a.created).getTime() - new Date(b.created).getTime()
         );
 
         break;
 
       case "delete":
-        if (
-          !auth.value.currentDevice ||
-          !chat.value ||
-          chat.value.id !== message.data.chatId ||
-          message.data.deviceId !== auth.value.currentDevice
-        )
-          break;
+        if (!auth.value.currentDevice || !chat.value) break;
 
-        messages.value = messages.value
-          .filter((msg) => msg.id !== message.data.id)
-          .sort(
-            (a, b) => Number(new Date(a.created)) - Number(new Date(b.created))
-          );
+        const messageIndex = messages.value.findIndex(
+          (v) => v.id === message.data.id
+        );
+
+        if (messageIndex === -1) break;
+
+        messages.value.splice(messageIndex, 1);
+        messages.value.sort(
+          (a, b) =>
+            new Date(a.created).getTime() - new Date(b.created).getTime()
+        );
 
         break;
     }

@@ -2,18 +2,39 @@
 const auth = useAuth();
 const socket = useSocket();
 
+const locale = ref("fi-FI");
+
 interface Device {
-  id: string;
-  lastUsed: string;
+  id: number;
   name: string;
+  lastUsed: string;
 }
 
-const { data: profile } = await useLazyFetch("/api/profile");
+const { data: profile } = useLazyFetch("/api/profile");
 
 const currentPassword = ref("");
 const newPassword = ref("");
 const error = ref("");
 const errorTimeout = ref(0);
+
+// Sorted devices by last used date in descending order
+// Keep current device at the top
+const devices = computed(() =>
+  !profile.value
+    ? []
+    : [...profile.value.devices].sort((a, b) => {
+        const lastUsed = () =>
+          new Date(b.lastUsed).getTime() - new Date(a.lastUsed).getTime();
+
+        if (!auth.value.authenticated || !auth.value.currentDevice)
+          return lastUsed();
+
+        if (auth.value.currentDevice === a.id) return -Infinity;
+        if (auth.value.currentDevice === b.id) return Infinity;
+
+        return lastUsed();
+      })
+);
 
 async function handleSubmit() {
   $fetch("/api/profile", {
@@ -53,6 +74,7 @@ async function deleteDevice(deviceId: number) {
 }
 
 onMounted(() => {
+  if (navigator) locale.value = navigator.language;
   refreshNuxtData("updateDevice");
 
   watch(auth, (newAuth) => {
@@ -74,28 +96,42 @@ onMounted(() => {
     }
   });
 
+  function addDevice(device: Device) {
+    if (!profile.value) return;
+
+    profile.value.devices = profile.value.devices.filter(
+      (d) => d.id !== device.id
+    );
+
+    profile.value.devices.push(device);
+  }
+
   const onMessage = async (e: MessageEvent) => {
+    if (!auth.value.authenticated) return;
     const message: SocketMessage<Device> = JSON.parse(e.data);
 
     if (message.event !== "device") return;
 
     switch (message.mode) {
       case "post":
-        if (!profile.value) break;
-        // @ts-expect-error Compatible but slightly different types
-        profile.value.devices.push(message.data);
+        if (!auth.value.currentDevice) {
+          const unwatchAuth = watch(auth, (newAuth) => {
+            if (newAuth.authenticated && newAuth.currentDevice) {
+              addDevice(message.data);
+              unwatchAuth();
+            }
+          });
+        } else {
+          addDevice(message.data);
+        }
 
         break;
 
       case "delete":
         if (!profile.value) break;
-        profile.value.devices = profile.value.devices
-          // @ts-expect-error Compatible but slightly different types
-          .filter((device) => device.id !== message.data.id)
-          .sort(
-            (a, b) =>
-              new Date(a.lastUsed).getTime() + new Date(b.lastUsed).getTime()
-          );
+        profile.value.devices = profile.value.devices.filter(
+          (device) => device.id !== message.data.id
+        );
 
         break;
     }
@@ -122,6 +158,8 @@ onMounted(() => {
             autofocus
             id="username"
             type="text"
+            autocomplete="username"
+            spellcheck="false"
             v-model="profile.username"
           />
         </div>
@@ -150,50 +188,71 @@ onMounted(() => {
         <Alert :text="error"></Alert>
       </form>
 
-      <div v-if="profile?.devices?.length" class="devices">
-        <h2>Your Devices</h2>
-        <div class="devices__table-container">
-          <table class="devices__table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Last used</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                :key="device.id"
-                v-for="device in profile?.devices"
-                :class="
-                  auth.authenticated &&
-                  auth.currentDevice !== null &&
-                  device.id === auth.currentDevice &&
-                  'current-device'
-                "
-              >
-                <td>{{ device.name }}</td>
-                <td>
-                  {{ new Date(device.lastUsed).toLocaleString("en-GB") }}
-                </td>
-                <td>
-                  <button
-                    @click="() => deleteDevice(device.id)"
-                    :disabled="
-                      auth.authenticated &&
-                      auth.currentDevice !== null &&
-                      device.id === auth.currentDevice
+      <ClientOnly>
+        <div v-if="devices.length" class="devices">
+          <h2>Your Devices</h2>
+          <div class="devices__table-container">
+            <table class="devices__table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Last used</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  :key="device.id"
+                  v-for="device in devices"
+                  :class="
+                    auth.authenticated &&
+                    auth.currentDevice !== null &&
+                    device.id === auth.currentDevice
+                      ? 'current-device'
+                      : null
+                  "
+                >
+                  <td>{{ device.name }}</td>
+                  <td
+                    :title="
+                      new Date(device.lastUsed).toLocaleString(locale, {
+                        dateStyle: 'full',
+                        timeStyle: 'full',
+                      })
                     "
                   >
-                    <Icon name="material-symbols:delete-rounded" size="1.5em" />
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-            <div></div>
-          </table>
+                    {{
+                      new Date(device.lastUsed).toLocaleString(locale, {
+                        day: "numeric",
+                        month: "numeric",
+                        year: "numeric",
+                        hour: "numeric",
+                        minute: "numeric",
+                      })
+                    }}
+                  </td>
+                  <td>
+                    <button
+                      @click="() => deleteDevice(device.id)"
+                      :disabled="
+                        auth.authenticated &&
+                        auth.currentDevice !== null &&
+                        device.id === auth.currentDevice
+                      "
+                    >
+                      <Icon
+                        name="material-symbols:delete-rounded"
+                        size="1.5em"
+                      />
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+              <div></div>
+            </table>
+          </div>
         </div>
-      </div>
+      </ClientOnly>
     </div>
   </main>
 </template>
