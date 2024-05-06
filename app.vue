@@ -25,7 +25,7 @@ async function updateDevice() {
 
   if (!data) return;
 
-  auth.value.currentDevice = data.id;
+  auth.value.currentDevice = data;
 }
 
 onMounted(() => {
@@ -43,8 +43,14 @@ onMounted(() => {
     const wsURL = `${wsProtocol}${window.location.host}`;
 
     const startConnection = async () => {
-      socket.value = new WebSocket(wsURL);
-      socket.value.addEventListener("close", startConnection);
+      if (
+        !socket.value ||
+        socket.value.readyState === socket.value.CLOSED ||
+        socket.value.readyState === socket.value.CLOSING
+      ) {
+        socket.value = new WebSocket(wsURL);
+        socket.value.addEventListener("close", startConnection);
+      }
 
       if (!auth.value.authenticated) return navigateTo("/login");
 

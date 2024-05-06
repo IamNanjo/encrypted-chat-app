@@ -1,19 +1,12 @@
 <script setup lang="ts">
+import type { RawChat } from "~/server/api/chats.get";
+
 const auth = useAuth();
 const isOpen = useChatMenu();
 const selectedChat = useChat();
 const socket = useSocket();
 
 const userSearch = ref("");
-
-interface RawChat {
-  id: number;
-  members: {
-    id: number;
-    username: string;
-    devices: { id: number; key: string }[];
-  }[];
-}
 
 const { data: chats } = await useLazyAsyncData(
   "chats",
@@ -39,6 +32,7 @@ async function parseChat(rawChat: RawChat): Promise<Chat> {
 
   for (let i = 0, iLen = rawChat.members.length; i < iLen; i++) {
     const member = rawChat.members[i];
+    if (!member) continue;
 
     temp.members.push({
       id: member.id,

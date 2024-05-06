@@ -1,4 +1,4 @@
-import db from "~/server/db";
+import db, { User, eq } from "~/server/db";
 import { getSession } from "~/server/session";
 
 export default defineEventHandler(async (e) => {
@@ -9,14 +9,9 @@ export default defineEventHandler(async (e) => {
   }
 
   return await Promise.all([
-    db.user.delete({ where: { id: session.data.userId } }),
+    db.delete(User).where(eq(User.id, session.data.userId)),
     session.clear(),
   ])
-    .then(() => {
-      setResponseStatus(e, 204);
-      return "User deleted";
-    })
-    .catch(() => {
-      setResponseStatus(e, 400);
-    });
+    .then(() => setResponseStatus(e, 204, "User deleted"))
+    .catch(() => setResponseStatus(e, 400));
 });

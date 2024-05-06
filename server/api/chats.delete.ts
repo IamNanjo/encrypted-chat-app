@@ -1,59 +1,43 @@
-import db from "~/server/db";
+import z from "zod";
+import db, { Chat, ChatToUser, eq } from "~/server/db";
 import { getSession } from "~/server/session";
-import type { Chat } from "./chats.post";
 
 export default defineEventHandler(async (e) => {
   const session = await getSession(e);
+  const { userId } = session.data;
 
-  if (!("userId" in session.data)) {
+  if (!userId) {
     return sendRedirect(e, "/login");
   }
 
-  const body = (await readBody(e)) as { id?: number } | null;
+  const { id: chatId } = await readValidatedBody(
+    e,
+    z.object({
+      id: z
+        .number({ message: "No chat ID provided" })
+        .int("Chat ID must be an integer"),
+    }).parse
+  );
 
-  if (!body || !body.id || !Number(body.id)) {
-    setResponseStatus(e, 400);
-    return "No chat ID provided";
+  const chats = db
+    .select({ id: Chat.id, userId: ChatToUser.userId })
+    .from(Chat)
+    .innerJoin(ChatToUser, eq(Chat.id, ChatToUser.chatId))
+    .where(eq(Chat.id, chatId))
+    .all();
+
+  if (!chats.length) {
+    setResponseStatus(e, 404, "Chat not found");
+    return;
   }
 
-  const userId = Number(session.data.userId);
-  const chatId = Number(body.id);
-
-  let chat = null;
-
-  try {
-    chat = await db.chat.findUnique({ where: { id: chatId } });
-  } finally {
-    if (!chat) {
-      setResponseStatus(e, 404);
-      return "Chat not found - possibly already deleted";
-    }
-  }
-
-  chat = await db.chat.delete({
-    where: { id: chatId, members: { some: { id: userId } } },
-    select: {
-      id: true,
-      members: {
-        select: {
-          id: true,
-          username: true,
-          devices: {
-            select: {
-              id: true,
-              key: true,
-            },
-          },
-        },
-      },
-    },
-  });
+  db.delete(Chat).where(eq(Chat.id, chatId)).run();
 
   if (global.clients) {
-    for (const member of chat.members) {
-      if (!(member.id in global.clients)) continue;
+    for (const chat of chats) {
+      if (!chat || !(chat.userId in global.clients)) continue;
 
-      for (const socket of global.clients[member.id]) {
+      for (const socket of global.clients[chat.userId]) {
         if (socket.readyState !== socket.OPEN) continue;
 
         socket.send(
@@ -61,7 +45,7 @@ export default defineEventHandler(async (e) => {
             event: "chat",
             mode: "delete",
             data: chat,
-          } as SocketMessage<Chat>)
+          } as SocketMessage<typeof chat>)
         );
       }
     }

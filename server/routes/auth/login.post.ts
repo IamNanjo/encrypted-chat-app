@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import z from "zod";
-import db from "~/server/db";
+import db, { User, eq } from "~/server/db";
 import { secret, getExpiration, getSession } from "~/server/session";
 
 export default defineEventHandler(async (e) => {
@@ -10,7 +10,7 @@ export default defineEventHandler(async (e) => {
     z.object({ username: z.string().min(1), password: z.string().min(1) }).parse
   );
 
-  const user = await db.user.findUnique({ where: { username } });
+  const user = db.select().from(User).where(eq(User.username, username)).get();
 
   if (!user) {
     setResponseStatus(e, 404);

@@ -1,7 +1,8 @@
-import db from "~/server/db";
-import {getSession} from "~/server/session";
+import z from "zod";
 import { UAParser } from "ua-parser-js";
-import type { Device } from "./device.delete";
+
+import { getSession } from "~/server/session";
+import db, { User, Device, eq, lte } from "~/server/db";
 
 export default defineEventHandler(async (e) => {
   const session = await getSession(e);
@@ -12,44 +13,42 @@ export default defineEventHandler(async (e) => {
 
   const userId = session.data.userId;
 
-  const user = await db.user.findUnique({ where: { id: userId } });
+  const user = db.select().from(User).where(eq(User.id, userId)).get();
   if (!user) {
     e.context.session = null;
     setResponseStatus(e, 401);
     return send(e, "User has been deleted");
   }
 
-  const body = (await readBody(e)) as { key?: Device["key"] };
-
-  if (!body || !("key" in body) || !body.key) {
-    setResponseStatus(e, 400);
-    return send(e, "Public key missing from the request");
-  }
+  const body = await readValidatedBody(
+    e,
+    z.object({ key: z.string().min(50) }).parse
+  );
 
   // Get device information for the device name
   const device = new UAParser(getHeader(e, "User-Agent")).getResult();
 
-  // Delete devices that have not been used in 7 days
-  const oneWeekAgo = new Date(Date.now() - 604800000);
-  await db.device.deleteMany({ where: { lastUsed: { lte: oneWeekAgo } } });
-
-  const updatedDevice = await db.device.upsert({
-    where: { key: body.key },
-    create: {
+  const updatedDevice = db
+    .insert(Device)
+    .values({
       name: `${device.browser.name} ${device.os.name}`,
       key: body.key,
-      user: {
-        connect: { id: userId },
-      },
-    },
-    update: { lastUsed: new Date() },
-    select: {
-      id: true,
-      name: true,
-      key: true,
-      lastUsed: true,
-    },
-  });
+      userId,
+    })
+    .onConflictDoUpdate({
+      target: Device.key,
+      set: { lastUsed: new Date() },
+    })
+    .returning({
+      id: Device.id,
+      name: Device.name,
+      lastUsed: Device.lastUsed,
+    })
+    .get();
+
+  // Delete devices that have not been used in 7 days
+  const oneWeekAgo = new Date(Date.now() - 604800000);
+  db.delete(Device).where(lte(Device.lastUsed, oneWeekAgo)).run();
 
   if (global.clients && userId in global.clients) {
     for (const socket of global.clients[userId]) {
@@ -60,10 +59,10 @@ export default defineEventHandler(async (e) => {
           event: "device",
           mode: "post",
           data: updatedDevice,
-        } as SocketMessage<Device>)
+        } as SocketMessage<typeof updatedDevice>)
       );
     }
   }
 
-  return updatedDevice;
+  return updatedDevice.id;
 });

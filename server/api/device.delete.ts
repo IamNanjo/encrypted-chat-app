@@ -1,5 +1,6 @@
-import db from "~/server/db";
-import {getSession} from "~/server/session";
+import z from "zod";
+import db, { Device, and, eq } from "~/server/db";
+import { getSession } from "~/server/session";
 
 export interface Device {
   id: number;
@@ -16,29 +17,25 @@ export default defineEventHandler(async (e) => {
   }
 
   const userId = Number(session.data.userId);
-  const body = (await readBody(e)) as { deviceId?: Device["id"] } | null;
+  const body = await readValidatedBody(
+    e,
+    z.object({
+      deviceId: z.number({ message: "Request is missing the device ID" }).int(),
+    }).parse
+  );
 
-  if (
-    !body ||
-    typeof body !== "object" ||
-    Array.isArray(body) ||
-    !("deviceId" in body)
-  ) {
-    setResponseStatus(e, 400);
-    return "Request is missing the device ID";
-  }
+  const deviceId = body.deviceId;
 
-  const deviceId = Number(body.deviceId);
-
-  const device = await db.device.delete({
-    where: { id: Number(deviceId), userId },
-    select: {
-      id: true,
-      name: true,
-      key: true,
-      lastUsed: true,
-    },
-  });
+  const device = db
+    .delete(Device)
+    .where(and(eq(Device.id, deviceId), eq(Device.userId, userId)))
+    .returning({
+      id: Device.id,
+      name: Device.name,
+      key: Device.key,
+      lastUsed: Device.lastUsed,
+    })
+    .get();
 
   if (global.clients && userId in global.clients) {
     for (const socket of global.clients[userId]) {
