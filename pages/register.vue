@@ -21,9 +21,15 @@ async function handleSubmit() {
       password: password.value,
     },
   })
-    .then(handleAuthentication)
+    .then(
+      (value: string | { token: string; userId: number; username: string }) => {
+        if (typeof value === "string") throw value;
+        handleAuthentication(value);
+      }
+    )
     .catch((err) => {
-      error.value = err.data;
+      error.value =
+        typeof err === "string" ? err : JSON.stringify(err, null, 4);
     });
 }
 
