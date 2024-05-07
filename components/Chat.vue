@@ -183,7 +183,8 @@ onMounted(() => {
           !auth.value.currentDevice ||
           !chat.value ||
           chat.value.id !== message.data.chatId ||
-          message.data.deviceId !== auth.value.currentDevice
+          message.data.deviceId !== auth.value.currentDevice ||
+          messages.value.map((m) => m.id).includes(message.data.id)
         )
           break;
 
