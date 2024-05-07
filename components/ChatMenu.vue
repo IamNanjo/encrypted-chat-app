@@ -103,7 +103,12 @@ onMounted(() => {
 
     switch (message.mode) {
       case "post":
-        chats.value = [await parseChat(message.data), ...chats.value];
+        const newChat = await parseChat(message.data);
+
+        // Add chat if not already in the chat list
+        if (!chats.value.map((c) => c.id).includes(newChat.id))
+          chats.value = [newChat, ...chats.value];
+
         break;
 
       case "delete":
