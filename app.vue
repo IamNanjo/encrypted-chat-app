@@ -1,5 +1,4 @@
 <script setup lang="ts">
-const socket = useSocket();
 const auth = useAuth();
 const keyPair = useKeyPair();
 
