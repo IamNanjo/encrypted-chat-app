@@ -43,6 +43,7 @@ export default defineEventHandler(async (e) => {
     return setResponseStatus(e, 404, "Message not found");
   }
 
+  if (!global.clients) global.clients = {};
   for (const member of chat.members) {
     if (!(member.userId in global.clients)) continue;
 

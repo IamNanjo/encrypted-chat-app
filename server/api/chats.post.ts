@@ -54,6 +54,7 @@ export default defineEventHandler(async (e) => {
 
   setResponseStatus(e, 201, "Chat created");
 
+  if (!global.clients) global.clients = {};
   for (const member of chat.members) {
     if (!member || !(member.id in global.clients)) continue;
 
