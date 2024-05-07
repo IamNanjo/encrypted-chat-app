@@ -126,9 +126,7 @@ onMounted(() => {
   padding: 0;
   font: inherit;
   text-decoration: none;
-  transition-property: background-color, color;
-  transition-duration: 0.1s;
-  transition-timing-function: linear;
+  transition: background-color 0.1s ease;
 }
 
 :root {
@@ -182,8 +180,8 @@ body {
   background-color: var(--bg-primary);
   color: var(--text-primary);
   font-family: var(--ff-primary);
-  z-index: 0;
   scrollbar-width: thin;
+  z-index: 0;
 }
 
 pre,
@@ -195,8 +193,7 @@ main {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: calc(100vh - 3em);
-  min-height: calc(100svh - 3em);
+  height: calc(100% - 3em);
   overflow-x: hidden;
 }
 
