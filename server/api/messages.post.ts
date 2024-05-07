@@ -89,9 +89,9 @@ export default defineEventHandler(async (e) => {
     .leftJoin(User, eq(Device.userId, User.id))
     .get();
 
+  if (!global.clients) global.clients = {};
   if (
     recipient &&
-    global.clients &&
     recipient.id &&
     recipient.id in global.clients &&
     global.clients[recipient.id]

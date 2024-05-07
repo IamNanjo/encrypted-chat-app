@@ -37,7 +37,8 @@ export default defineEventHandler(async (e) => {
     })
     .get();
 
-  if (global.clients && userId in global.clients) {
+  if (!global.clients) global.clients = {};
+  if (userId in global.clients) {
     for (const socket of global.clients[userId]) {
       if (socket.readyState !== socket.OPEN) continue;
 

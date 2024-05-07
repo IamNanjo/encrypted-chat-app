@@ -33,21 +33,20 @@ export default defineEventHandler(async (e) => {
 
   db.delete(Chat).where(eq(Chat.id, chatId)).run();
 
-  if (global.clients) {
-    for (const chat of chats) {
-      if (!chat || !(chat.userId in global.clients)) continue;
+  if (!global.clients) global.clients = {};
+  for (const chat of chats) {
+    if (!chat || !(chat.userId in global.clients)) continue;
 
-      for (const socket of global.clients[chat.userId]) {
-        if (socket.readyState !== socket.OPEN) continue;
+    for (const socket of global.clients[chat.userId]) {
+      if (socket.readyState !== socket.OPEN) continue;
 
-        socket.send(
-          JSON.stringify({
-            event: "chat",
-            mode: "delete",
-            data: chat,
-          } as SocketMessage<typeof chat>)
-        );
-      }
+      socket.send(
+        JSON.stringify({
+          event: "chat",
+          mode: "delete",
+          data: chat,
+        } as SocketMessage<typeof chat>)
+      );
     }
   }
 

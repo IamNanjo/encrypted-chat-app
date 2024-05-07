@@ -50,7 +50,8 @@ export default defineEventHandler(async (e) => {
   const oneWeekAgo = new Date(Date.now() - 604800000);
   db.delete(Device).where(lte(Device.lastUsed, oneWeekAgo)).run();
 
-  if (global.clients && userId in global.clients) {
+  if (!global.clients) global.clients = {};
+  if (userId in global.clients) {
     for (const socket of global.clients[userId]) {
       if (socket.readyState !== socket.OPEN) continue;
 
