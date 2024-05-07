@@ -12,7 +12,7 @@
     "dbdrop": "drizzle-kit drop",
     "dbstudio": "drizzle-kit studio",
     "dbinspect": "drizzle-kit introspect:sqlite",
-    "start": "pm2 flush && pm2 restart pm2-process.json"
+    "start": "pm2 delete ecosystem.config.cjs && pm2 start ecosystem.config.cjs"
   },
   "devDependencies": {
     "@nuxt/devtools": "latest",
