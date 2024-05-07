@@ -9,5 +9,7 @@ export default async function logOut() {
 
   await $fetch("/auth/logout", { method: "POST" });
 
+  clearNuxtData();
+  clearNuxtState();
   navigateTo("/login");
 }
