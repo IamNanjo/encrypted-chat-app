@@ -21,5 +21,5 @@ export default function handleAuthentication({
     currentDevice: auth.value.authenticated ? auth.value.currentDevice : null,
   };
 
-  return navigateTo("/");
+  navigateTo("/");
 }
