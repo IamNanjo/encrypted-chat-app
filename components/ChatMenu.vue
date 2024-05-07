@@ -10,18 +10,14 @@ const userSearch = ref("");
 
 const { data: chats } = await useLazyAsyncData(
   "chats",
-  async () => {
-    await refreshNuxtData("updateDevice");
-    const data = await $fetch("/api/chats");
-    return await parseChats(data);
-  },
+  async () => $fetch("/api/chats").then(parseChats),
   { server: false, default: () => [] as Chat[] }
 );
 
 const { data: users, refresh: refreshUsers } = await useLazyFetch(
   "/api/users",
   {
-    server: false,
+    immediate: false,
     query: { q: userSearch.value },
     watch: [userSearch],
   }
