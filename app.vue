@@ -36,12 +36,11 @@ onMounted(() => {
     }
   });
 
-  if (!socket.value) {
-    const unwatchAuth = watch(auth, (newAuth) => {
-      if (!newAuth.authenticated || !newAuth.token) return;
-      startWebsocketConnection().then(() => unwatchAuth());
-    });
-  }
+  const unwatchAuth = watch(auth, (newAuth) => {
+    if (!newAuth.authenticated || !newAuth.token) return;
+    unwatchAuth();
+    startWebsocketConnection();
+  });
 });
 </script>
 
