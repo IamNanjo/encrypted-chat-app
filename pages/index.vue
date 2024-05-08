@@ -4,7 +4,7 @@ const keyPair = useKeyPair();
 </script>
 
 <template>
-  <main>
+  <main id="main">
     <template
       v-if="keyPair && auth.authenticated && auth.currentDevice !== null"
     >
@@ -25,10 +25,6 @@ const keyPair = useKeyPair();
 </template>
 
 <style scoped lang="scss">
-main {
-  align-items: stretch;
-}
-
 // Loading
 .loading {
   display: flex;
