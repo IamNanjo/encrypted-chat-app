@@ -69,7 +69,6 @@ async function newChat(user: number) {
     body: { user },
   });
 
-  isOpen.value = false;
   if (res !== null) {
     selectChat(await parseChat(res));
   }
@@ -183,8 +182,23 @@ onMounted(() => {
 .chat-menu {
   display: flex;
   flex-direction: column;
+  flex-basis: 0;
   background-color: var(--bg-primary);
+  min-width: 0;
+  height: 100%;
   font-size: 1.125em;
+  overflow: hidden auto;
+  text-wrap: nowrap;
+  transition: flex 0.2s ease;
+
+  &.open {
+    flex-basis: 100%;
+
+    & + .chat {
+      flex-basis: 0;
+      padding: 0;
+    }
+  }
 
   .icon {
     flex: 0 0 1.5em;
@@ -247,6 +261,7 @@ onMounted(() => {
     > * {
       flex: 0;
       width: 80%;
+      margin-inline: auto;
     }
 
     &::backdrop {
@@ -258,16 +273,21 @@ onMounted(() => {
     display: contents;
   }
 
+  &__search-input,
+  &__search-results {
+    width: min(90%, 30rem);
+  }
+
   &__search-input {
-    width: 60%;
+    margin-inline: auto;
     padding: 0.5em 1em;
     border-radius: var(--border-radius);
     border: 0;
   }
 
   &__search-results {
-    width: 60%;
     max-height: 80%;
+    margin-inline: auto;
     overflow-y: auto;
     overflow-x: hidden;
 
@@ -297,6 +317,29 @@ onMounted(() => {
     background-color: var(--fg-primary);
     padding: 0.5em 3em;
     border-radius: 6px;
+  }
+}
+
+@media screen and (min-width: 50rem) {
+  .mobile-menu {
+    display: block;
+
+    &__toggle {
+      transform: translateX(-5em) rotate(-90deg);
+    }
+  }
+
+  .chat-menu {
+    border-right: 1px solid var(--bg-raise);
+
+    & + .chat {
+      flex-basis: 100%;
+    }
+  }
+
+  .chat-menu,
+  .chat-menu.open {
+    flex-basis: 16em;
   }
 }
 </style>
