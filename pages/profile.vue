@@ -266,7 +266,7 @@ main > div {
   justify-content: center;
   align-items: stretch;
   gap: 2em;
-  padding: 1em;
+  padding: 0.5em;
 }
 
 .profile-form,
