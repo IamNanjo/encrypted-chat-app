@@ -7,15 +7,16 @@ const keyPair = useKeyPair();
   <main v-if="keyPair && auth.authenticated && auth.currentDevice !== null">
     <ChatMenu /><Chat />
   </main>
-  <main v-else class="loading">
-    <div class="loading__text">Loading cryptographic keypair</div>
-    <div class="loading__ring">
-      <div></div>
-      <div></div>
-      <div></div>
-      <div></div>
-    </div>
-  </main>
+  <ClientOnly v-else
+    ><main class="loading">
+      <div class="loading__text">Loading cryptographic keypair</div>
+      <div class="loading__ring">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+      </div></main
+  ></ClientOnly>
 </template>
 
 <style scoped lang="scss">
