@@ -1,22 +1,32 @@
 <script setup lang="ts">
 const auth = useAuth();
-const chat = useChat();
+const selectedChat = useChat();
 const keyPair = useKeyPair();
 const socket = useSocket();
 
 const newMessage = ref("");
 const messages = ref<Message[]>([]);
 
+const sortedMessages = computed(() =>
+  [...messages.value].sort(
+    (a, b) => new Date(a.created).getTime() - new Date(b.created).getTime()
+  )
+);
+
 const { execute: getMessages } = await useLazyAsyncData(
   "messages",
   async () => {
-    if (!auth.value.authenticated || !auth.value.currentDevice || !chat.value) {
+    if (
+      !auth.value.authenticated ||
+      !auth.value.currentDevice ||
+      !selectedChat.value
+    ) {
       return navigateTo("/login");
     }
 
     const data = await $fetch("/api/messages", {
       query: {
-        chatId: chat.value.id,
+        chatId: selectedChat.value.id,
         deviceId: auth.value.currentDevice,
       },
     });
@@ -40,7 +50,7 @@ const { execute: getMessages } = await useLazyAsyncData(
   }
 );
 
-watch(chat, async (newChat) => {
+watch(selectedChat, (newChat) => {
   if (newChat && newChat.id && keyPair.value) getMessages();
   if (!newChat) messages.value = [];
 });
@@ -60,13 +70,13 @@ function scrollToBottom(id: string) {
 }
 
 async function sendMessage() {
-  if (!chat.value || !newMessage.value) return;
+  if (!selectedChat.value || !newMessage.value) return;
 
   const encoder = new TextEncoder();
 
   // Encrypt message using each device of each chat member and send it
-  for (let i = 0, iLen = chat.value.members.length; i < iLen; i++) {
-    const member = chat.value.members[i];
+  for (let i = 0, iLen = selectedChat.value.members.length; i < iLen; i++) {
+    const member = selectedChat.value.members[i];
 
     for (let j = 0, jLen = member.devices.length; j < jLen; j++) {
       const device = member.devices[j];
@@ -79,7 +89,7 @@ async function sendMessage() {
       await $fetch("/api/messages", {
         method: "POST",
         body: {
-          chat: chat.value.id,
+          chat: selectedChat.value.id,
           message: encryptedMessage,
           deviceId: device.id,
         },
@@ -91,12 +101,12 @@ async function sendMessage() {
 }
 
 async function deleteMessage(message: number) {
-  if (!chat.value || !message) return;
+  if (!selectedChat.value || !message) return;
 
   await $fetch("/api/messages", {
     method: "DELETE",
     body: {
-      chat: chat.value.id,
+      chat: selectedChat.value.id,
       message: message,
     },
   });
@@ -171,8 +181,8 @@ onMounted(() => {
       case "post":
         if (
           !auth.value.currentDevice ||
-          !chat.value ||
-          chat.value.id !== message.data.chatId ||
+          !selectedChat.value ||
+          selectedChat.value.id !== message.data.chatId ||
           message.data.deviceId !== auth.value.currentDevice ||
           messages.value.map((m) => m.id).includes(message.data.id)
         )
@@ -184,15 +194,11 @@ onMounted(() => {
           ? decoder.decode(decryptedMessage)
           : message.data.content;
         messages.value = [...messages.value, message.data];
-        messages.value.sort(
-          (a, b) =>
-            new Date(a.created).getTime() - new Date(b.created).getTime()
-        );
 
         break;
 
       case "delete":
-        if (!auth.value.currentDevice || !chat.value) break;
+        if (!auth.value.currentDevice || !selectedChat.value) break;
 
         const messageIndex = messages.value.findIndex(
           (v) => v.id === message.data.id
@@ -201,10 +207,6 @@ onMounted(() => {
         if (messageIndex === -1) break;
 
         messages.value.splice(messageIndex, 1);
-        messages.value.sort(
-          (a, b) =>
-            new Date(a.created).getTime() - new Date(b.created).getTime()
-        );
 
         break;
     }
@@ -222,7 +224,11 @@ onMounted(() => {
 <template>
   <div class="chat">
     <div id="chat__messages" class="chat__messages">
-      <div v-for="message in messages" :key="message.id" class="chat__message">
+      <div
+        v-for="message in sortedMessages"
+        :key="message.id"
+        class="chat__message"
+      >
         <div class="chat__message-info">
           <div>
             {{ message.sender.username || "Deleted user" }} -
@@ -244,7 +250,7 @@ onMounted(() => {
     <form class="chat__new-message" @submit.prevent="sendMessage" method="post">
       <textarea
         required
-        :disabled="!chat || !chat.id"
+        :disabled="!selectedChat || !selectedChat.id"
         id="chat__textfield"
         class="chat__textfield"
         placeholder="Enter text here..."
@@ -261,7 +267,7 @@ onMounted(() => {
         "
       ></textarea>
       <button
-        :disabled="!chat || !chat.id"
+        :disabled="!selectedChat || !selectedChat.id"
         class="chat__send-message"
         type="submit"
         title="Send"
