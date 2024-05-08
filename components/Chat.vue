@@ -70,7 +70,17 @@ function scrollToBottom(id: string) {
 }
 
 async function sendMessage() {
-  const trimmedMessage = newMessage.value.trim();
+  const removeChars = (string: string, chars: string[]) =>
+    chars.reduce((prev, cur) => prev.replaceAll(cur, ""), string);
+
+  // Remove whitespace (including zero width spaces)
+  const trimmedMessage = removeChars(newMessage.value.trim(), [
+    "\u200B",
+    "\u200C",
+    "\u200D",
+    "\uFEFF",
+  ]);
+
   if (!selectedChat.value || !trimmedMessage) return;
 
   const encoder = new TextEncoder();
