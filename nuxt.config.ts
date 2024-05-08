@@ -6,26 +6,11 @@ export default defineNuxtConfig({
       title: "Encrypted Chat App",
     },
   },
-  experimental: {
-    restoreState: true,
-  },
-  modules: [
-    "@nuxtjs/color-mode",
-    "nuxt-icon",
-    "@nuxtjs/plausible",
-    "@nuxtjs/google-fonts",
-  ],
-  colorMode: {
-    classSuffix: "",
-    storageKey: "theme",
-    fallback: "dark",
-    preference: "system",
-  },
+  modules: ["nuxt-icon", "@nuxtjs/plausible", "@nuxtjs/google-fonts"],
   plausible: { apiHost: "https://plausible.nanjo.tech" },
   googleFonts: {
     families: {
-      "Roboto": [400, 700],
-      "JetBrains Mono": [400, 700],
+      Roboto: [400, 700],
     },
   },
 });

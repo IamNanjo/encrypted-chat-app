@@ -77,20 +77,6 @@ onMounted(() => {
 }
 
 :root {
-  color-scheme: light;
-  --bg-primary: #f7f7f7;
-  --bg-raise: white;
-  --bg-raise-1: white;
-  --bg-raise-2: white;
-  --fg-primary: black;
-  --text-primary: black;
-  --text-alt: white;
-  --text-muted: #7f7f7f;
-  --ff-primary: Roboto, sans-serif;
-  --ff-mono: "JetBrains Mono", monospace;
-  --scrollbar-size: 6px;
-}
-:root.dark {
   color-scheme: dark;
   --bg-primary: #121212;
   --bg-raise: rgba(255, 255, 255, 0.07);
@@ -100,7 +86,6 @@ onMounted(() => {
   --text-primary: white;
   --text-alt: black;
   --ff-primary: Roboto, sans-serif;
-  --ff-mono: "JetBrains Mono", monospace;
   --scrollbar-size: 6px;
 }
 
