@@ -11,7 +11,6 @@ export default defineNuxtRouteMiddleware(async (to) => {
   if (!session) return;
 
   const token = sessionStorage.getItem("jwt");
-
   if (!token) return navigateTo("/login");
 
   auth.value = {
@@ -21,8 +20,8 @@ export default defineNuxtRouteMiddleware(async (to) => {
     currentDevice: auth.value.authenticated ? auth.value.currentDevice : null,
   };
 
-  getKeyPair(auth.value);
+  getKeyPair(auth.value.userId);
   await startWebsocketConnection();
 
-  if (toAuthPage) navigateTo("/");
+  if (toAuthPage) return navigateTo("/");
 });
