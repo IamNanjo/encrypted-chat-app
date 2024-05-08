@@ -12,7 +12,10 @@ export default async function startWebsocketConnection() {
   ) {
     socket.value = new WebSocket(wsURL);
     socket.value.addEventListener("close", () => {
-      if (!auth.value.authenticated) return;
+      if (!auth.value.authenticated || !auth.value.token) {
+        navigateTo("/login");
+        return;
+      }
       startWebsocketConnection();
     });
   } else {
