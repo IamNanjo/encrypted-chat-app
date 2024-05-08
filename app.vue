@@ -28,17 +28,10 @@ async function updateDevice() {
 }
 
 onMounted(() => {
-  const unwatchKeyPair = watch(keyPair, (newKeyPair) => {
+  watch(keyPair, (newKeyPair) => {
     if (newKeyPair) {
       refreshDevice();
-      unwatchKeyPair();
     }
-  });
-
-  const unwatchAuth = watch(auth, (newAuth) => {
-    if (!newAuth.authenticated || !newAuth.token) return;
-    unwatchAuth();
-    startWebsocketConnection();
   });
 });
 </script>
