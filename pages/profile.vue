@@ -310,7 +310,7 @@ main > div {
 
   button {
     background-color: var(--fg-primary);
-    color: white;
+    color: var(--text-alt);
     padding: 0.75em;
     border: 0;
     border-radius: 6px;
