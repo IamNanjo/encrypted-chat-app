@@ -153,27 +153,28 @@ onMounted(() => {
     </div>
     <div class="chat-list">
       <div v-if="!chats || !chats.length">No chats found</div>
-      <button
-        v-else
-        v-for="chat in chats"
-        :key="chat.id"
-        :class="selectedChat?.id === chat.id ? 'active' : ''"
-        @click="() => selectChat(chat)"
-      >
-        <span>{{
-          chat.members
-            .filter(
-              (user) => user.username !== (auth as AuthenticatedUser).username
-            )
-            .map((user) => user.username)
-            .join(", ")
-        }}</span>
-        <Icon
-          name="material-symbols:delete-rounded"
-          size="1.5em"
-          @click="(e: Event) => deleteChat(e, chat.id)"
-        />
-      </button>
+      <TransitionGroup v-else name="chat-list-transition">
+        <button
+          v-for="(chat, index) in chats"
+          :key="chat.id"
+          :class="selectedChat?.id === chat.id ? 'active' : ''"
+          @click="() => selectChat(chat)"
+        >
+          <span>{{
+            chat.members
+              .filter(
+                (user) => user.username !== (auth as AuthenticatedUser).username
+              )
+              .map((user) => user.username)
+              .join(", ")
+          }}</span>
+          <Icon
+            name="material-symbols:delete-rounded"
+            size="1.5em"
+            @click="(e: Event) => deleteChat(e, chat.id)"
+          />
+        </button>
+      </TransitionGroup>
     </div>
   </aside>
 </template>
@@ -202,6 +203,18 @@ onMounted(() => {
 
   .icon {
     flex: 0 0 1.5em;
+  }
+}
+
+.chat-list {
+  &-transition-enter-active,
+  &-transition-leave-active {
+    transition: all 0.3s ease;
+  }
+  &-transition-enter-from,
+  &-transition-leave-to {
+    opacity: 0;
+    transform: translateX(-5rem);
   }
 }
 
