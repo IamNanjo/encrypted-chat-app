@@ -68,6 +68,10 @@ onMounted(() => {
 </template>
 
 <style scoped lang="scss">
+main {
+  align-items: center;
+}
+
 .auth-form {
   display: flex;
   flex-direction: column;

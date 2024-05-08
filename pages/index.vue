@@ -26,7 +26,7 @@ const keyPair = useKeyPair();
 
 <style scoped lang="scss">
 main {
-  height: calc(100% - 3em);
+  align-items: stretch;
 }
 
 // Loading

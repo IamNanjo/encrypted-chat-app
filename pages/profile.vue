@@ -258,6 +258,7 @@ onMounted(() => {
 
 <style scoped lang="scss">
 main {
+  align-items: center;
   padding-block: 2em;
 }
 main > div {
