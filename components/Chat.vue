@@ -73,6 +73,7 @@ async function sendMessage() {
   if (!selectedChat.value || !newMessage.value) return;
 
   const encoder = new TextEncoder();
+  const messageId = crypto.randomUUID();
 
   // Encrypt message using each device of each chat member and send it
   for (let i = 0, iLen = selectedChat.value.members.length; i < iLen; i++) {
@@ -89,9 +90,10 @@ async function sendMessage() {
       await $fetch("/api/messages", {
         method: "POST",
         body: {
-          chat: selectedChat.value.id,
-          message: encryptedMessage,
+          chatId: selectedChat.value.id,
           deviceId: device.id,
+          messageId: messageId,
+          message: encryptedMessage,
         },
       });
     }

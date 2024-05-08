@@ -21,9 +21,10 @@ export default defineEventHandler(async (e) => {
   const body = await readValidatedBody(
     e,
     z.object({
-      chat: z.number({ message: "No chat selected" }),
-      message: z.string({ message: "No message provided" }),
+      chatId: z.number({ message: "No chat ID provided" }),
       deviceId: z.number({ message: "No device ID provided" }),
+      messageId: z.string({ message: "No message ID provided" }).length(36),
+      message: z.string({ message: "No message provided" }),
     }).parse
   );
 
@@ -32,14 +33,14 @@ export default defineEventHandler(async (e) => {
     .from(Chat)
     .where(
       and(
-        eq(Chat.id, body.chat),
+        eq(Chat.id, body.chatId),
         exists(
           db
             .select()
             .from(ChatToUser)
             .where(
               and(
-                eq(ChatToUser.chatId, body.chat),
+                eq(ChatToUser.chatId, body.chatId),
                 eq(ChatToUser.userId, session.data.userId)
               )
             )
@@ -57,8 +58,9 @@ export default defineEventHandler(async (e) => {
     .insert(Message)
     .values({
       userId: session.data.userId,
-      chatId: body.chat,
+      chatId: body.chatId,
       deviceId: body.deviceId,
+      messageId: body.messageId,
       content: body.message,
     })
     .run().lastInsertRowid;
@@ -66,10 +68,11 @@ export default defineEventHandler(async (e) => {
   const message = db
     .select({
       id: Message.id,
-      content: Message.content,
-      created: Message.created,
       chatId: Message.chatId,
       deviceId: Message.deviceId,
+      messageId: Message.messageId,
+      content: Message.content,
+      created: Message.created,
       sender: {
         id: User.id,
         username: User.username,
