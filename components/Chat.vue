@@ -7,6 +7,9 @@ const socket = useSocket();
 const newMessage = ref("");
 const messages = ref<Message[]>([]);
 
+const maxNewMessageLines = ref(6);
+const newMessageLines = computed(() => newMessage.value.split("\n").length);
+
 const sortedMessages = computed(() =>
   messages.value.sort(
     (a, b) => new Date(a.created).getTime() - new Date(b.created).getTime()
@@ -261,15 +264,20 @@ onMounted(() => {
         :disabled="!selectedChat || !selectedChat.id"
         id="chat__textfield"
         class="chat__textfield"
-        placeholder="Enter text here..."
+        placeholder="Enter message here..."
         cols="30"
-        rows="1"
+        :rows="
+          newMessageLines < maxNewMessageLines
+            ? newMessageLines
+            : maxNewMessageLines
+        "
         v-model="newMessage"
         @keydown.enter.prevent="
           (e) => {
             if (e.shiftKey) {
               newMessage += '\n';
               scrollToBottom('chat__textfield');
+              scrollToBottom('chat__messages');
             } else sendMessage();
           }
         "
@@ -288,7 +296,6 @@ onMounted(() => {
 
 <style lang="scss">
 .chat {
-  position: relative;
   display: flex;
   flex-basis: 100%;
   min-width: 0;
@@ -302,12 +309,11 @@ onMounted(() => {
 
   &__messages {
     display: flex;
-    position: relative;
     flex-direction: column;
     gap: 1em;
     width: 100%;
     padding-right: 0.5em;
-    padding-bottom: 1em;
+    padding-bottom: 1rem;
     overflow-x: hidden;
     text-overflow: ellipsis;
     overflow-y: auto;
@@ -343,25 +349,24 @@ onMounted(() => {
   &__new-message {
     display: flex;
     width: 100%;
-    min-height: min-content;
-    max-height: max-content;
     font-size: 1.25em;
   }
 
   &__textfield {
     background-color: var(--bg-raise);
     flex: 1;
-    min-height: fit-content;
-    max-height: 100%;
-    padding: 0.25em;
+    height: 100%;
+    padding: 0.5em;
     border: 1px solid #7f7f7f;
     border-top-left-radius: var(--border-radius);
     border-bottom-left-radius: var(--border-radius);
     resize: none;
+    overflow-y: auto;
   }
 
   &__send-message {
     background-color: var(--fg-primary);
+    height: 100%;
     padding-inline: 0.25em;
     border: 1px solid #7f7f7f;
     border-top-right-radius: var(--border-radius);
