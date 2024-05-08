@@ -12,9 +12,9 @@ export const secret =
   process.env.CHAT_SESSION_SECRET ??
   crypto.randomBytes(48).toString("base64url");
 
-export function getSessionConfig(): SessionConfig {
-  const { expirationDate, expirationTime } = getExpiration();
+export const expirationTime = 7 * 24 * 60 * 60;
 
+export function getSessionConfig(): SessionConfig {
   return {
     password: secret,
     maxAge: expirationTime,
@@ -23,25 +23,14 @@ export function getSessionConfig(): SessionConfig {
       sameSite: "strict",
       httpOnly: true,
       secure: true,
-      maxAge: expirationTime,
-      expires: expirationDate,
     },
   };
-}
-
-export function getExpiration() {
-  const expirationDate = new Date();
-  const now = Date.now();
-  const expirationTime = 7 * 24 * 60 * 60;
-  expirationDate.setTime(now + expirationTime * 1000);
-
-  return { expirationDate, expirationTime };
 }
 
 export function signJWT(data: SessionData) {
   return jwt.sign(data, secret, {
     algorithm: "HS512",
-    expiresIn: getExpiration().expirationTime,
+    expiresIn: expirationTime,
   });
 }
 
