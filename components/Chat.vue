@@ -70,7 +70,8 @@ function scrollToBottom(id: string) {
 }
 
 async function sendMessage() {
-  if (!selectedChat.value || !newMessage.value) return;
+  const trimmedMessage = newMessage.value.trim();
+  if (!selectedChat.value || !trimmedMessage) return;
 
   const encoder = new TextEncoder();
   const messageId = crypto.randomUUID();
@@ -84,7 +85,7 @@ async function sendMessage() {
 
       const encryptedMessage = await encryptMessage(
         device.key,
-        encoder.encode(newMessage.value.trim()).buffer as ArrayBuffer
+        encoder.encode(trimmedMessage).buffer as ArrayBuffer
       );
 
       await $fetch("/api/messages", {
@@ -279,7 +280,9 @@ onMounted(() => {
 .chat {
   position: relative;
   display: flex;
+  flex-basis: 100%;
   min-width: 0;
+  height: 100%;
   flex-direction: column;
   background-color: var(--bg-primary);
   justify-content: space-between;
