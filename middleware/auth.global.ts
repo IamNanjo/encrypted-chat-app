@@ -21,7 +21,9 @@ export default defineNuxtRouteMiddleware(async (to) => {
   };
 
   getKeyPair(auth.value.userId);
-  await startWebsocketConnection();
+
+  const redirect = startWebsocketConnection();
+  if (redirect) return redirect;
 
   if (toAuthPage) return navigateTo("/");
 });

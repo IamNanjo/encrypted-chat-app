@@ -1,6 +1,12 @@
-export default async function startWebsocketConnection() {
+export default function startWebsocketConnection() {
   const socket = useSocket();
   const auth = useAuth();
+
+  if (!auth.value.authenticated || !auth.value.token)
+    return navigateTo("/login");
+
+  const authenticated = auth.value.authenticated;
+  const token = auth.value.token;
 
   const wsProtocol = window.location.protocol === "https:" ? "wss://" : "ws://";
   const wsURL = `${wsProtocol}${window.location.host}`;
@@ -12,20 +18,12 @@ export default async function startWebsocketConnection() {
   ) {
     socket.value = new WebSocket(wsURL);
     socket.value.addEventListener("close", () => {
-      if (!auth.value.authenticated || !auth.value.token) {
-        navigateTo("/login");
-        return;
-      }
-      startWebsocketConnection();
+      if (authenticated && token) startWebsocketConnection();
+      else return navigateTo("/login");
     });
   } else {
     return;
   }
-
-  if (!auth.value.authenticated || !auth.value.token)
-    return navigateTo("/login");
-
-  const token = auth.value.token;
 
   socket.value.addEventListener("message", async (e) => {
     const { event, mode } = JSON.parse(e.data) as SocketMessage<any>;

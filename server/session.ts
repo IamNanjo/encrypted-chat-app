@@ -39,7 +39,7 @@ export function getExpiration() {
 }
 
 export function signJWT(data: SessionData) {
-  jwt.sign(data, secret, {
+  return jwt.sign(data, secret, {
     algorithm: "HS512",
     expiresIn: getExpiration().expirationTime,
   });

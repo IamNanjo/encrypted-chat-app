@@ -4,6 +4,8 @@ const password = ref("");
 const error = ref("");
 const errorTimeout = ref(0);
 
+import type { FetchError } from "ofetch";
+
 async function handleSubmit() {
   if (!username.value || !password.value) {
     return (error.value = "You need to fill all the fields");
@@ -17,8 +19,8 @@ async function handleSubmit() {
     },
   })
     .then(handleAuthentication)
-    .catch((err) => {
-      error.value = err.data;
+    .catch((err: FetchError) => {
+      error.value = err.statusMessage || "Error";
     });
 }
 
@@ -37,9 +39,7 @@ onMounted(() => {
 <template>
   <main>
     <form class="auth-form" @submit.prevent="handleSubmit">
-      <h1>Log In</h1>
-      <div class="or">or</div>
-      <NuxtLink to="/register">Sign up instead</NuxtLink>
+      <h1>Log In or Register</h1>
       <div class="form-group">
         <label for="username">Username</label>
         <input
@@ -80,7 +80,7 @@ onMounted(() => {
   font-size: 1.125em;
 
   > h1 {
-    font-size: 1.75em;
+    font-size: 1.5em;
     text-align: center;
   }
 
