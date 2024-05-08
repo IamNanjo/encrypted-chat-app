@@ -1,9 +1,10 @@
 export default function startWebsocketConnection() {
   const socket = useSocket();
   const auth = useAuth();
+  const authPage = "/login";
 
   if (!auth.value.authenticated || !auth.value.token)
-    return navigateTo("/login");
+    return navigateTo(authPage);
 
   const authenticated = auth.value.authenticated;
   const token = auth.value.token;
@@ -19,7 +20,7 @@ export default function startWebsocketConnection() {
     socket.value = new WebSocket(wsURL);
     socket.value.addEventListener("close", () => {
       if (authenticated && token) startWebsocketConnection();
-      else return navigateTo("/login");
+      else return navigateTo(authPage);
     });
   } else {
     return;
@@ -30,9 +31,8 @@ export default function startWebsocketConnection() {
 
     if (event !== "auth" || mode !== "delete") return;
 
-    await Promise.all([$fetch("/auth/logout", { method: "POST" }), logOut()]);
-
-    navigateTo("/login");
+    await logOut();
+    navigateTo(authPage);
   });
 
   socket.value.addEventListener("open", () => {
