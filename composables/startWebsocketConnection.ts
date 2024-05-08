@@ -11,7 +11,10 @@ export default async function startWebsocketConnection() {
     socket.value.readyState === socket.value.CLOSING
   ) {
     socket.value = new WebSocket(wsURL);
-    socket.value.addEventListener("close", startWebsocketConnection);
+    socket.value.addEventListener("close", () => {
+      if (!auth.value.authenticated) return;
+      startWebsocketConnection();
+    });
   } else {
     return;
   }
