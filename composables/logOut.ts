@@ -4,7 +4,10 @@ export default async function logOut() {
   const selectedChat = useChat();
   const socket = useSocket();
 
-  if (socket.value) socket.value.close();
+  if (socket.value) {
+    socket.value.close();
+    socket.value = null;
+  }
 
   auth.value = { authenticated: false };
   keyPair.value = null;
