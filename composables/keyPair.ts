@@ -1,8 +1,6 @@
-import type { AuthenticatedUser } from "./useAuth";
-
-export function getKeyPair(auth: AuthenticatedUser) {
-  if (window.indexedDB) getKeyPairFromIDB(auth);
-  else getKeyPairFromLocalStorage(auth);
+export function getKeyPair(userId: number) {
+  if (window.indexedDB) getKeyPairFromIDB(userId);
+  else getKeyPairFromLocalStorage(userId);
 }
 
 function generateKeyPair() {
@@ -18,10 +16,10 @@ function generateKeyPair() {
   ) as Promise<CryptoKeyPair>;
 }
 
-function getKeyPairFromLocalStorage(auth: AuthenticatedUser) {
+function getKeyPairFromLocalStorage(userId: number) {
   const keyPair = useKeyPair();
 
-  let storedKeyPair = localStorage.getItem(auth.userId.toString());
+  let storedKeyPair = localStorage.getItem(userId.toString());
 
   if (!storedKeyPair) {
     const newKeys = generateKeyPair();
@@ -30,7 +28,7 @@ function getKeyPairFromLocalStorage(auth: AuthenticatedUser) {
       Promise.all([exportKey(privateKey), exportKey(publicKey)]).then(
         ([exportedPrivateKey, exportedPublicKey]) => {
           localStorage.setItem(
-            auth.userId.toString(),
+            userId.toString(),
             JSON.stringify({
               privateKey: exportedPrivateKey,
               publicKey: exportedPublicKey,
@@ -58,7 +56,7 @@ function getKeyPairFromLocalStorage(auth: AuthenticatedUser) {
   }
 }
 
-function getKeyPairFromIDB(auth: AuthenticatedUser) {
+function getKeyPairFromIDB(userId: number) {
   const keyPair = useKeyPair();
 
   const dbPromise = window.indexedDB.open("chatAppDB", 1);
@@ -81,7 +79,7 @@ function getKeyPairFromIDB(auth: AuthenticatedUser) {
 
     const getRequest = objectStore
       .index("userId")
-      .get(IDBKeyRange.only(auth.userId));
+      .get(IDBKeyRange.only(userId));
 
     getRequest.onsuccess = () => {
       if (getRequest.result === undefined) {
@@ -89,7 +87,7 @@ function getKeyPairFromIDB(auth: AuthenticatedUser) {
           const transaction = db.transaction(["keyPairs"], "readwrite");
           const objectStore = transaction.objectStore("keyPairs");
           const addRequest = objectStore.add({
-            userId: auth.userId,
+            userId: Number(userId),
             keyPair: generatedKeyPair,
           });
 
