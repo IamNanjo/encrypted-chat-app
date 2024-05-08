@@ -4,15 +4,15 @@ export default async function logOut() {
   const selectedChat = useChat();
   const socket = useSocket();
 
-  if (socket.value) {
-    socket.value.close();
-    socket.value = null;
-  }
-
   auth.value = { authenticated: false };
   keyPair.value = null;
   selectedChat.value = null;
   sessionStorage.removeItem("jwt");
+
+  if (socket.value) {
+    socket.value.close();
+    socket.value = null;
+  }
 
   await $fetch("/auth/logout", { method: "POST" });
 
