@@ -121,10 +121,6 @@ onMounted(() => {
   };
 
   if (socket.value) socket.value.addEventListener("message", onMessage);
-
-  watch(socket, () => {
-    if (socket.value) socket.value.addEventListener("message", onMessage);
-  });
 });
 </script>
 
