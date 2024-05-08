@@ -8,7 +8,7 @@ const newMessage = ref("");
 const messages = ref<Message[]>([]);
 
 const sortedMessages = computed(() =>
-  [...messages.value].sort(
+  messages.value.sort(
     (a, b) => new Date(a.created).getTime() - new Date(b.created).getTime()
   )
 );
@@ -102,14 +102,14 @@ async function sendMessage() {
   newMessage.value = "";
 }
 
-async function deleteMessage(message: number) {
-  if (!selectedChat.value || !message) return;
+async function deleteMessage(messageId: string) {
+  if (!selectedChat.value) return;
 
   await $fetch("/api/messages", {
     method: "DELETE",
     body: {
-      chat: selectedChat.value.id,
-      message: message,
+      chatId: selectedChat.value.id,
+      messageId,
     },
   });
 }
@@ -203,7 +203,7 @@ onMounted(() => {
         if (!auth.value.currentDevice || !selectedChat.value) break;
 
         const messageIndex = messages.value.findIndex(
-          (v) => v.id === message.data.id
+          (v) => v.messageId === message.data.messageId
         );
 
         if (messageIndex === -1) break;
@@ -215,11 +215,6 @@ onMounted(() => {
   };
 
   if (socket.value) socket.value.addEventListener("message", onMessage);
-  else {
-    watch(socket, () => {
-      if (socket.value) socket.value.addEventListener("message", onMessage);
-    });
-  }
 });
 </script>
 
@@ -241,7 +236,7 @@ onMounted(() => {
             class="clickable"
             name="material-symbols:delete-rounded"
             size="1.5em"
-            @click="() => deleteMessage(message.id)"
+            @click="() => deleteMessage(message.messageId)"
           />
         </div>
         <div class="chat__message-content">

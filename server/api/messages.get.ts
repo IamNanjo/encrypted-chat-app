@@ -31,6 +31,7 @@ export default defineEventHandler(async (e) => {
   return db
     .select({
       id: Message.id,
+      messageId: Message.messageId,
       content: Message.content,
       created: Message.created,
       sender: {
