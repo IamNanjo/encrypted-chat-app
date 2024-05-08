@@ -140,7 +140,7 @@ main {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: calc(100% - 3em);
+  min-height: calc(100% - 3em);
   overflow-x: hidden;
 }
 
