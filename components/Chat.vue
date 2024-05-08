@@ -235,28 +235,31 @@ onMounted(() => {
 <template>
   <div class="chat">
     <div id="chat__messages" class="chat__messages">
-      <div
-        v-for="message in sortedMessages"
-        :key="message.id"
-        class="chat__message"
-      >
-        <div class="chat__message-info">
-          <div>
-            {{ message.sender.username || "Deleted user" }} -
-            {{ getRelativeTime(message.created) }}
+      <TransitionGroup name="chat__messages-transition">
+        <div
+          v-for="(message, index) in sortedMessages"
+          :key="message.id"
+          class="chat__message"
+          :style="{ transitionDelay: `${index * 20}ms` }"
+        >
+          <div class="chat__message-info">
+            <div>
+              {{ message.sender.username || "Deleted user" }} -
+              {{ getRelativeTime(message.created) }}
+            </div>
+            <Icon
+              v-if="(auth as AuthenticatedUser).userId === message.sender.id"
+              class="clickable"
+              name="material-symbols:delete-rounded"
+              size="1.5em"
+              @click="() => deleteMessage(message.messageId)"
+            />
           </div>
-          <Icon
-            v-if="(auth as AuthenticatedUser).userId === message.sender.id"
-            class="clickable"
-            name="material-symbols:delete-rounded"
-            size="1.5em"
-            @click="() => deleteMessage(message.messageId)"
-          />
+          <div class="chat__message-content">
+            {{ message.content }}
+          </div>
         </div>
-        <div class="chat__message-content">
-          {{ message.content }}
-        </div>
-      </div>
+      </TransitionGroup>
     </div>
     <form class="chat__new-message" @submit.prevent="sendMessage" method="post">
       <textarea
@@ -272,13 +275,12 @@ onMounted(() => {
             : maxNewMessageLines
         "
         v-model="newMessage"
-        @keydown.enter.prevent="
+        @keydown.enter.exact.prevent="sendMessage"
+        @keydown.shift.enter.exact="
           (e) => {
-            if (e.shiftKey) {
-              newMessage += '\n';
-              scrollToBottom('chat__textfield');
-              scrollToBottom('chat__messages');
-            } else sendMessage();
+            // newMessage += '\n';
+            scrollToBottom('chat__textfield');
+            scrollToBottom('chat__messages');
           }
         "
       ></textarea>
@@ -317,6 +319,16 @@ onMounted(() => {
     overflow-x: hidden;
     text-overflow: ellipsis;
     overflow-y: auto;
+
+    &-transition-enter-active,
+    &-transition-leave-active {
+      transition: all 0.3s ease;
+    }
+    &-transition-enter-from,
+    &-transition-leave-to {
+      opacity: 0;
+      transform: translateX(10rem);
+    }
   }
 
   &__message {
