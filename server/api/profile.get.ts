@@ -1,4 +1,4 @@
-import db, { User, Device, eq, desc } from "~/server/db";
+import db, { User, eq } from "~/server/db";
 import { getSession } from "~/server/session";
 
 export function getProfileWithDevices(userId: number) {

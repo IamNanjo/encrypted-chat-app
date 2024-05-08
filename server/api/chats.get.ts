@@ -1,13 +1,4 @@
-import db, {
-  Chat,
-  ChatToUser,
-  User,
-  Device,
-  and,
-  eq,
-  ne,
-  desc,
-} from "~/server/db";
+import db, { Chat, ChatToUser, User, Device, eq, desc } from "~/server/db";
 import { alias } from "drizzle-orm/sqlite-core";
 import { getSession } from "~/server/session";
 
