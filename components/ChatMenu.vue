@@ -181,12 +181,11 @@ onMounted(() => {
 
 <style lang="scss">
 .chat-menu {
+  flex: 1 1 0;
   display: flex;
   flex-direction: column;
   flex-basis: 0;
-  background-color: var(--bg-primary);
   min-width: 0;
-  height: 100%;
   font-size: 1.125em;
   overflow: hidden auto;
   text-wrap: nowrap;
