@@ -79,13 +79,13 @@ onMounted(() => {
 :root {
   color-scheme: light;
   --bg-primary: #f7f7f7;
-  --bg-raise: #ffffff;
-  --bg-raise-1: #ffffff;
-  --bg-raise-2: var(--bg-raise);
-  --fg-primary: #ff6961;
+  --bg-raise: white;
+  --bg-raise-1: white;
+  --bg-raise-2: white;
+  --fg-primary: black;
   --text-primary: black;
-  --text-alt: var(--fg-primary);
-  --text-muted: #444444;
+  --text-alt: white;
+  --text-muted: #7f7f7f;
   --ff-primary: Roboto, sans-serif;
   --ff-mono: "JetBrains Mono", monospace;
   --scrollbar-size: 6px;
@@ -96,21 +96,12 @@ onMounted(() => {
   --bg-raise: rgba(255, 255, 255, 0.07);
   --bg-raise-1: #232323;
   --bg-raise-2: #333333;
-  --fg-primary: #ff6961;
+  --fg-primary: white;
   --text-primary: white;
-  --text-alt: var(--fg-primary);
-  --text-muted: #999999;
+  --text-alt: black;
   --ff-primary: Roboto, sans-serif;
   --ff-mono: "JetBrains Mono", monospace;
   --scrollbar-size: 6px;
-}
-
-:root .icon {
-  color: black;
-}
-:root.dark .icon {
-  color: white;
-  filter: drop-shadow(1px 1px 1px black);
 }
 
 #__nuxt {
@@ -156,6 +147,11 @@ a {
 button {
   box-shadow: none;
   border-style: none;
+}
+
+.icon {
+  color: var(--text-primary);
+  filter: drop-shadow(1px 1px 1px var(--text-muted));
 }
 
 .clickable,

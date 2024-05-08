@@ -317,9 +317,10 @@ onMounted(() => {
     display: flex;
     flex-direction: column;
     gap: 0.5em;
-    padding: 1em;
-    border-radius: var(--border-radius);
     background-color: var(--bg-raise);
+    padding: 1em;
+    border: 1px solid var(--text-muted);
+    border-radius: var(--border-radius);
 
     &-info {
       display: flex;
@@ -330,10 +331,6 @@ onMounted(() => {
       width: 100%;
       overflow: hidden;
       user-select: none;
-
-      .icon {
-        color: var(--ff-primary);
-      }
     }
 
     &-content {
@@ -346,16 +343,18 @@ onMounted(() => {
   &__new-message {
     display: flex;
     width: 100%;
-    height: max-content;
+    min-height: min-content;
+    max-height: max-content;
     font-size: 1.25em;
   }
 
   &__textfield {
     background-color: var(--bg-raise);
     flex: 1;
-    height: max-content;
-    max-height: 5em;
+    min-height: fit-content;
+    max-height: 100%;
     padding: 0.25em;
+    border: 1px solid #7f7f7f;
     border-top-left-radius: var(--border-radius);
     border-bottom-left-radius: var(--border-radius);
     resize: none;
@@ -364,11 +363,13 @@ onMounted(() => {
   &__send-message {
     background-color: var(--fg-primary);
     padding-inline: 0.25em;
+    border: 1px solid #7f7f7f;
     border-top-right-radius: var(--border-radius);
     border-bottom-right-radius: var(--border-radius);
 
     .icon {
-      color: white;
+      color: var(--text-alt);
+      filter: none;
     }
   }
 

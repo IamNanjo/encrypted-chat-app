@@ -247,7 +247,7 @@ onMounted(() => {
     height: min(18em, 60%);
     padding: 1em 0;
     font-size: 1.125em;
-    border: 1px solid var(--bg-raise);
+    border: 1px solid var(--text-muted);
     border-radius: 12px;
     box-shadow: 1px 1px 4px 2px black;
     transform: translate(-50%, -50%);
@@ -281,8 +281,8 @@ onMounted(() => {
   &__search-input {
     margin-inline: auto;
     padding: 0.5em 1em;
+    border: 1px solid var(--text-muted);
     border-radius: var(--border-radius);
-    border: 0;
   }
 
   &__search-results {
@@ -297,7 +297,7 @@ onMounted(() => {
       text-align: left;
       background-color: var(--bg-raise);
       padding: 0.5em;
-      border: 1px solid var(--bg-raise);
+      border: 1px solid var(--text-muted);
       user-select: none;
 
       &:first-child {
@@ -315,6 +315,7 @@ onMounted(() => {
   &__cancel {
     display: block;
     background-color: var(--fg-primary);
+    color: var(--text-alt);
     padding: 0.5em 3em;
     border-radius: 6px;
   }
