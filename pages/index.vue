@@ -18,7 +18,11 @@ const keyPair = useKeyPair();
   </main>
 </template>
 
-<style lang="scss">
+<style scoped lang="scss">
+main {
+  height: calc(100% - 3em);
+}
+
 // Loading
 .loading {
   display: flex;
