@@ -40,10 +40,6 @@ const auth = useAuth();
             <Icon name="material-symbols:login-rounded" size="1.5em" />
             <div>Log In</div>
           </NuxtLink>
-          <NuxtLink to="/register" v-if="!auth.authenticated">
-            <Icon name="material-symbols:person-add-rounded" size="1.5em" />
-            <div>Sign Up</div>
-          </NuxtLink>
           <NuxtLink to="/profile" v-if="auth.authenticated">
             <Icon
               name="material-symbols:manage-accounts-rounded"

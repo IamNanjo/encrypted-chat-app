@@ -1,8 +1,7 @@
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
 import z from "zod";
 import db, { User, eq } from "~/server/db";
-import { secret, getExpiration, getSession } from "~/server/session";
+import { getSession, signJWT } from "~/server/session";
 
 export default defineEventHandler(async (e) => {
   const { username, password } = await readValidatedBody(
@@ -13,24 +12,29 @@ export default defineEventHandler(async (e) => {
   const user = db.select().from(User).where(eq(User.username, username)).get();
 
   if (!user) {
-    setResponseStatus(e, 404);
-    return send(e, "User not found");
+    const hash = await bcrypt.hash(password, 12);
+
+    const userId = (await db.insert(User).values({ username, password: hash }))
+      .lastInsertRowid as number;
+
+    const sessionData = { userId, username };
+
+    const token = signJWT(sessionData);
+    const session = await getSession(e);
+
+    await session.update(sessionData);
+    return { ...sessionData, token };
   }
 
   if (!(await bcrypt.compare(password, user.password))) {
-    setResponseStatus(e, 401);
-    return send(e, "Incorrect password");
+    return setResponseStatus(e, 401, "Incorrect password");
   }
 
-  const sessionData = { userId: user.id, username: user.username };
+  const sessionData = { userId: user.id, username };
 
-  const token = jwt.sign(sessionData, secret, {
-    algorithm: "HS512",
-    expiresIn: getExpiration().expirationTime,
-  });
-
+  const token = signJWT(sessionData);
   const session = await getSession(e);
 
   await session.update(sessionData);
-  return { token, userId: user.id, username };
+  return { ...sessionData, token };
 });
