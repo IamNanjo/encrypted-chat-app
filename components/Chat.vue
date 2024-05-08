@@ -277,8 +277,7 @@ onMounted(() => {
         v-model="newMessage"
         @keydown.enter.exact.prevent="sendMessage"
         @keydown.shift.enter.exact="
-          (e) => {
-            // newMessage += '\n';
+          () => {
             scrollToBottom('chat__textfield');
             scrollToBottom('chat__messages');
           }
