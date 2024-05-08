@@ -115,6 +115,7 @@ code {
 main {
   display: flex;
   justify-content: center;
+  align-items: stretch;
   min-height: calc(100% - 3em);
   overflow-x: hidden;
 }
