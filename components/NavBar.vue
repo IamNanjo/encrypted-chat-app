@@ -1,6 +1,5 @@
 <script setup lang="ts">
 const route = useRoute();
-const theme = useColorMode();
 const auth = useAuth();
 </script>
 
@@ -27,14 +26,6 @@ const auth = useAuth();
         <div class="profile-menu__options">
           <div v-if="auth.authenticated" class="no-select">
             Logged in as {{ auth.username }}
-          </div>
-          <div>
-            <Icon name="material-symbols:brightness-4-rounded" size="1.5em" />
-            <select v-model="theme.preference" title="Theme selection">
-              <option value="system">System</option>
-              <option value="dark">Dark</option>
-              <option value="light">Light</option>
-            </select>
           </div>
           <NuxtLink to="/login" v-if="!auth.authenticated">
             <Icon name="material-symbols:login-rounded" size="1.5em" />
