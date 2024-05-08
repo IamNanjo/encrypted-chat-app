@@ -45,17 +45,18 @@ watch(chat, async (newChat) => {
   if (!newChat) messages.value = [];
 });
 
-watch(messages, () => setTimeout(scrollToBottom, 0));
+watch(messages, () => scrollToBottom("chat__messages"));
 
-function scrollToBottom() {
-  const scrollContainer = document.getElementById(
-    "chat__messages"
-  ) as HTMLDivElement;
+function scrollToBottom(id: string) {
+  const scrollContainer = document.getElementById(id);
+  if (!scrollContainer) return;
 
-  scrollContainer.scrollTo({
-    top: scrollContainer.scrollHeight,
-    behavior: "smooth",
-  });
+  setTimeout(() => {
+    scrollContainer.scrollTo({
+      top: scrollContainer.scrollHeight,
+      behavior: "smooth",
+    });
+  }, 0);
 }
 
 async function sendMessage() {
@@ -72,7 +73,7 @@ async function sendMessage() {
 
       const encryptedMessage = await encryptMessage(
         device.key,
-        encoder.encode(newMessage.value).buffer as ArrayBuffer
+        encoder.encode(newMessage.value.trim()).buffer as ArrayBuffer
       );
 
       await $fetch("/api/messages", {
@@ -161,17 +162,6 @@ async function decryptMessage(encryptedContent: string) {
 }
 
 onMounted(() => {
-  const textField = document.getElementById(
-    "chat__textfield"
-  ) as HTMLTextAreaElement;
-
-  textField.onkeydown = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
-  };
-
   const onMessage = async (e: MessageEvent) => {
     const message: SocketMessage<Message> = JSON.parse(e.data);
 
@@ -221,10 +211,11 @@ onMounted(() => {
   };
 
   if (socket.value) socket.value.addEventListener("message", onMessage);
-
-  watch(socket, () => {
-    if (socket.value) socket.value.addEventListener("message", onMessage);
-  });
+  else {
+    watch(socket, () => {
+      if (socket.value) socket.value.addEventListener("message", onMessage);
+    });
+  }
 });
 </script>
 
@@ -260,6 +251,14 @@ onMounted(() => {
         cols="30"
         rows="1"
         v-model="newMessage"
+        @keydown.enter.prevent="
+          (e) => {
+            if (e.shiftKey) {
+              newMessage += '\n';
+              scrollToBottom('chat__textfield');
+            } else sendMessage();
+          }
+        "
       ></textarea>
       <button
         :disabled="!chat || !chat.id"
@@ -312,7 +311,7 @@ onMounted(() => {
       align-items: center;
       gap: 1em;
       color: var(--text-muted);
-      width: max-content;
+      width: 100%;
       overflow: hidden;
       user-select: none;
 
