@@ -1,5 +1,5 @@
 import z from "zod";
-import db, { Chat, Message, User, and, eq } from "~/server/db";
+import db, { Chat, Message, and, eq } from "~/server/db";
 import { getSession } from "~/server/session";
 
 export default defineEventHandler(async (e) => {
@@ -12,31 +12,35 @@ export default defineEventHandler(async (e) => {
   const body = await readValidatedBody(
     e,
     z.object({
-      chat: z.number({
+      chatId: z.number({
         message: "You need to provide a chat ID",
       }),
-      message: z.number({
-        message: "You need to provide a message ID",
-      }),
+      messageId: z
+        .string({
+          message: "You need to provide a message ID",
+        })
+        .length(36),
     }).parse
   );
 
   const chat = await db.query.Chat.findFirst({
-    where: eq(Chat.id, body.chat),
+    where: eq(Chat.id, body.chatId),
     with: { members: { columns: { userId: true } } },
   });
 
   if (!chat) {
-    setResponseStatus(e, 404);
-    return "Chat not found";
+    return setResponseStatus(e, 404, "Chat not found");
   }
 
   const message = db
     .delete(Message)
     .where(
-      and(eq(Message.id, body.message), eq(Message.userId, session.data.userId))
+      and(
+        eq(Message.messageId, body.messageId),
+        eq(Message.userId, session.data.userId)
+      )
     )
-    .returning({ id: Message.id })
+    .returning({ messageId: Message.messageId })
     .get();
 
   if (!message) {
@@ -60,6 +64,5 @@ export default defineEventHandler(async (e) => {
     }
   }
 
-  setResponseStatus(e, 204);
-  return message;
+  setResponseStatus(e, 204, "Message deleted");
 });

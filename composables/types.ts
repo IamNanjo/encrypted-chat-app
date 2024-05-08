@@ -9,10 +9,11 @@ export interface Chat {
 
 export interface Message {
   id: number;
-  content: string;
-  created: string;
   chatId: number;
   deviceId: number;
+  messageId: string;
+  content: string;
+  created: string;
   sender: {
     id: number;
     username: string;

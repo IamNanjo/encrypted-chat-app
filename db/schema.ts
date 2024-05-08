@@ -56,7 +56,7 @@ export const ChatRelations = relations(Chat, ({ many }) => ({
 // Message
 export const Message = sqliteTable("Message", {
   id: integer("id").primaryKey({ autoIncrement: true }),
-  messageId: text("message_id").notNull().unique(),
+  messageId: text("message_id").notNull(),
   userId: integer("user_id")
     .notNull()
     .references(() => User.id, { onDelete: "cascade", onUpdate: "cascade" }),
