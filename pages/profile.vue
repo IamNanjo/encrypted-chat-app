@@ -188,19 +188,19 @@ onMounted(() => {
         <Alert :text="error"></Alert>
       </form>
 
-      <ClientOnly>
-        <div v-if="devices.length" class="devices">
-          <h2>Your Devices</h2>
-          <div class="devices__table-container">
-            <table class="devices__table">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Last used</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
+      <div v-if="devices.length" class="devices">
+        <h2>Your Devices</h2>
+        <div class="devices__table-container">
+          <table class="devices__table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Last used</th>
+                <th></th>
+              </tr>
+            </thead>
+            <ClientOnly
+              ><tbody>
                 <tr
                   :key="device.id"
                   v-for="device in devices"
@@ -246,13 +246,12 @@ onMounted(() => {
                       />
                     </button>
                   </td>
-                </tr>
-              </tbody>
-              <div></div>
-            </table>
-          </div>
+                </tr></tbody
+            ></ClientOnly>
+            <div></div>
+          </table>
         </div>
-      </ClientOnly>
+      </div>
     </div>
   </main>
 </template>
