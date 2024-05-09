@@ -1,6 +1,15 @@
 <script setup lang="ts">
 const route = useRoute();
 const auth = useAuth();
+const selectedChat = useChat();
+
+const chatName = computed(() => {
+  if (!auth.value.authenticated) return "";
+  return selectedChat.value?.members
+    .filter((m) => m.id !== (auth.value as AuthenticatedUser).userId)
+    .map((m) => m.username)
+    .join(", ");
+});
 </script>
 
 <template>
@@ -18,6 +27,7 @@ const auth = useAuth();
             size="2em" /></NuxtLink
       ></ClientOnly>
     </div>
+    <div>{{ chatName }}</div>
     <DropdownMenu>
       <div class="profile-menu__toggle" tabindex="0" title="Account">
         <Icon name="material-symbols:account-circle" size="2em" />
@@ -55,12 +65,22 @@ const auth = useAuth();
 
 <style lang="scss">
 nav {
+  position: sticky;
+  top: 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 1rem;
   width: 100%;
   height: 3em;
   padding-inline: 1em;
   border-bottom: 1px solid var(--bg-raise);
+  user-select: none;
+
+  > div:nth-child(2) {
+    text-wrap: nowrap;
+    overflow-x: hidden;
+    text-overflow: ellipsis;
+  }
 }
 </style>
