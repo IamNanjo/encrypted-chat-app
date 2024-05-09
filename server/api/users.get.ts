@@ -1,5 +1,5 @@
 import z from "zod";
-import db, { User, and, ne, ilike } from "~/server/db";
+import db, { User, and, ne, like } from "~/server/db";
 import { getSession } from "~/server/session";
 
 export default defineEventHandler(async (e) => {
@@ -19,7 +19,7 @@ export default defineEventHandler(async (e) => {
     .where(
       !query.q
         ? notCurrentUser
-        : and(notCurrentUser, ilike(User.username, `%${query.q}%`))
+        : and(notCurrentUser, like(User.username, `%${query.q}%`))
     )
     .all();
 });
