@@ -298,10 +298,11 @@ onMounted(() => {
 <style lang="scss">
 .chat {
   flex: 1 1 0;
+  align-self: stretch;
   display: flex;
   flex-basis: 100%;
   min-width: 0;
-  // height: 100%;
+  max-height: 100%;
   flex-direction: column;
   justify-content: space-between;
   padding: 1em;
@@ -313,6 +314,7 @@ onMounted(() => {
     flex-direction: column;
     gap: 1em;
     width: 100%;
+    height: 100%;
     padding-right: 0.5em;
     padding-bottom: 1rem;
     overflow-x: hidden;
