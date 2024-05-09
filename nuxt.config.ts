@@ -5,11 +5,6 @@ export default defineNuxtConfig({
       title: "Encrypted Chat App",
     },
   },
-  modules: ["nuxt-icon", "@nuxtjs/plausible", "@nuxtjs/google-fonts"],
+  modules: ["nuxt-icon", "@nuxtjs/plausible"],
   plausible: { apiHost: "https://plausible.nanjo.tech" },
-  googleFonts: {
-    families: {
-      Roboto: [400, 700],
-    },
-  },
 });

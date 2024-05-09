@@ -85,7 +85,7 @@ onMounted(() => {
   --fg-primary: white;
   --text-primary: white;
   --text-alt: black;
-  --ff-primary: Roboto, sans-serif;
+  --ff-primary: system-ui, sans-serif;
   --scrollbar-size: 6px;
 }
 
