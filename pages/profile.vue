@@ -10,7 +10,11 @@ interface Device {
   lastUsed: string;
 }
 
-const { data: profile } = useLazyFetch("/api/profile");
+const {
+  data: profile,
+  pending,
+  error: apiError,
+} = useLazyFetch("/api/profile");
 
 const currentPassword = ref("");
 const newPassword = ref("");
@@ -148,7 +152,8 @@ onMounted(() => {
 <template>
   <main>
     <div>
-      <div v-if="!profile">Failed to fetch profile</div>
+      <div v-if="pending">Loading profile...</div>
+      <div v-else-if="apiError || !profile">Failed to fetch profile</div>
       <form v-else class="profile-form" @submit.prevent="handleSubmit">
         <h1>Your Profile</h1>
         <div class="form-group">
