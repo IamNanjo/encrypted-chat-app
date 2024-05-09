@@ -297,15 +297,15 @@ onMounted(() => {
 
 <style lang="scss">
 .chat {
-  flex: 1 1 0;
+  flex: 1 1 100%;
   align-self: stretch;
   display: flex;
-  flex-basis: 100%;
   min-width: 0;
   max-height: 100%;
   flex-direction: column;
   justify-content: space-between;
-  padding: 1em;
+  padding-inline: 1em;
+  padding-bottom: 1em;
 
   --border-radius: 6px;
 
@@ -316,7 +316,7 @@ onMounted(() => {
     width: 100%;
     height: 100%;
     padding-right: 0.5em;
-    padding-bottom: 1rem;
+    padding-block: 1rem;
     overflow-x: hidden;
     text-overflow: ellipsis;
     overflow-y: auto;
