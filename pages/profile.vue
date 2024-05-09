@@ -204,55 +204,58 @@ onMounted(() => {
                 <th></th>
               </tr>
             </thead>
-            <ClientOnly
-              ><tbody>
-                <tr
-                  :key="device.id"
-                  v-for="device in devices"
-                  :class="
-                    auth.authenticated &&
-                    auth.currentDevice !== null &&
-                    device.id === auth.currentDevice
-                      ? 'current-device'
-                      : null
-                  "
-                >
-                  <td>{{ device.name }}</td>
-                  <td
-                    :title="
-                      new Date(device.lastUsed).toLocaleString(locale, {
-                        dateStyle: 'full',
-                        timeStyle: 'full',
-                      })
+            <ClientOnly>
+              <tbody>
+                <TransitionGroup name="devices-transition">
+                  <tr
+                    :key="device.id"
+                    v-for="device in devices"
+                    :class="
+                      auth.authenticated &&
+                      auth.currentDevice !== null &&
+                      device.id === auth.currentDevice
+                        ? 'current-device'
+                        : null
                     "
                   >
-                    {{
-                      new Date(device.lastUsed).toLocaleString(locale, {
-                        day: "numeric",
-                        month: "numeric",
-                        year: "numeric",
-                        hour: "numeric",
-                        minute: "numeric",
-                      })
-                    }}
-                  </td>
-                  <td>
-                    <button
-                      @click="() => deleteDevice(device.id)"
-                      :disabled="
-                        auth.authenticated &&
-                        auth.currentDevice !== null &&
-                        device.id === auth.currentDevice
+                    <td>{{ device.name }}</td>
+                    <td
+                      :title="
+                        new Date(device.lastUsed).toLocaleString(locale, {
+                          dateStyle: 'full',
+                          timeStyle: 'full',
+                        })
                       "
                     >
-                      <Icon
-                        name="material-symbols:delete-rounded"
-                        size="1.5em"
-                      />
-                    </button>
-                  </td>
-                </tr></tbody
-            ></ClientOnly>
+                      {{
+                        new Date(device.lastUsed).toLocaleString(locale, {
+                          day: "numeric",
+                          month: "numeric",
+                          year: "numeric",
+                          hour: "numeric",
+                          minute: "numeric",
+                        })
+                      }}
+                    </td>
+                    <td>
+                      <button
+                        @click="() => deleteDevice(device.id)"
+                        :disabled="
+                          auth.authenticated &&
+                          auth.currentDevice !== null &&
+                          device.id === auth.currentDevice
+                        "
+                      >
+                        <Icon
+                          name="material-symbols:delete-rounded"
+                          size="1.5em"
+                        />
+                      </button>
+                    </td>
+                  </tr>
+                </TransitionGroup>
+              </tbody>
+            </ClientOnly>
             <div></div>
           </table>
         </div>
@@ -263,7 +266,6 @@ onMounted(() => {
 
 <style scoped lang="scss">
 main {
-  align-items: center;
   padding-block: 2em;
 }
 main > div {
@@ -324,6 +326,16 @@ main > div {
 }
 
 .devices {
+  &-transition-enter-active,
+  &-transition-leave-active {
+    transition: all 0.3s ease;
+  }
+  &-transition-enter-from,
+  &-transition-leave-to {
+    opacity: 0;
+    transform: translateX(5rem);
+  }
+
   &__table-container {
     width: 100%;
     overflow-x: auto;
