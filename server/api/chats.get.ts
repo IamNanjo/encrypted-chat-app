@@ -30,11 +30,7 @@ interface TempChats {
 }
 
 export default defineEventHandler(async (e) => {
-  const session = await getSession(e);
-
-  if (!("userId" in session.data)) {
-    return sendRedirect(e, "/login");
-  }
+  if (!e.context.session) return sendRedirect(e, "/login");
 
   const ctu1 = alias(ChatToUser, "ctu1");
   const ctu2 = alias(ChatToUser, "ctu2");

@@ -1,8 +1,9 @@
 import db, { User, eq } from "~/server/db";
-import { getSession } from "~/server/session";
 
 export default defineEventHandler(async (e) => {
-  const { data, clear } = await getSession(e);
+  const session = e.context.session;
+  if (!session) return null;
+  const { data, clear } = session;
 
   const user = db.select().from(User).where(eq(User.id, data.userId)).get();
 

@@ -1,14 +1,9 @@
 import z from "zod";
 import db, { Chat, ChatToUser, eq } from "~/server/db";
-import { getSession } from "~/server/session";
 
 export default defineEventHandler(async (e) => {
-  const session = await getSession(e);
-  const { userId } = session.data;
-
-  if (!userId) {
-    return sendRedirect(e, "/login");
-  }
+  const session = e.context.session;
+  if (!session) return sendRedirect(e, "/login");
 
   const { id: chatId } = await readValidatedBody(
     e,

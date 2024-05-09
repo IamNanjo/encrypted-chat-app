@@ -3,11 +3,8 @@ import db, { User, and, ne, ilike } from "~/server/db";
 import { getSession } from "~/server/session";
 
 export default defineEventHandler(async (e) => {
-  const session = await getSession(e);
-
-  if (!("userId" in session.data)) {
-    return sendRedirect(e, "/login");
-  }
+  const session = e.context.session;
+  if (!session) return sendRedirect(e, "/login");
 
   const query = await getValidatedQuery(
     e,

@@ -1,7 +1,5 @@
-import { getSession } from "~/server/session";
-
 export default defineEventHandler(async (e) => {
-  const session = await getSession(e);
-  await session.clear();
+  const session = e.context.session;
+  if (session) await session.clear();
   await sendRedirect(e, "/login");
 });
