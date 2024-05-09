@@ -16,7 +16,7 @@ const sortedMessages = computed(() =>
   )
 );
 
-const { execute: getMessages } = await useLazyAsyncData(
+const { execute: getMessages } = useLazyAsyncData(
   "messages",
   async () => {
     if (

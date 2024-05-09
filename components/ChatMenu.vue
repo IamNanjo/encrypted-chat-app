@@ -8,20 +8,20 @@ const socket = useSocket();
 
 const userSearch = ref("");
 
-const { data: chats } = await useLazyAsyncData(
+const { data: chats } = useLazyAsyncData<Chat[]>(
   "chats",
   async () => $fetch("/api/chats").then(parseChats),
-  { server: false, default: () => [] as Chat[] }
+  { server: false, default: () => [] }
 );
 
-const { data: users, refresh: refreshUsers } = await useLazyFetch(
-  "/api/users",
-  {
-    immediate: false,
-    query: { q: userSearch.value },
-    watch: [userSearch],
-  }
-);
+const { data: users, refresh: refreshUsers } = useLazyFetch<
+  { id: number; username: string }[]
+>("/api/users", {
+  immediate: false,
+  query: { q: userSearch.value },
+  watch: [userSearch],
+  default: () => [],
+});
 
 async function parseChat(rawChat: RawChat): Promise<Chat> {
   let temp: Chat = { id: rawChat.id, members: [] };
