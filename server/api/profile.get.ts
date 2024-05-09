@@ -14,11 +14,8 @@ export function getProfileWithDevices(userId: number) {
 }
 
 export default defineEventHandler(async (e) => {
-  const session = await getSession(e);
-
-  if (!("userId" in session.data)) {
-    return sendRedirect(e, "/login");
-  }
+  const session = e.context.session;
+  if (!session) return sendRedirect(e, "/login");
 
   return getProfileWithDevices(session.data.userId);
 });

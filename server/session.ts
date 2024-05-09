@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 
 import type { H3Event, EventHandlerRequest, SessionConfig } from "h3";
 
-interface SessionData {
+export interface SessionData {
   userId: number;
   username: string;
 }

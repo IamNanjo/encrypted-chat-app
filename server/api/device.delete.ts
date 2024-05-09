@@ -10,11 +10,8 @@ export interface Device {
 }
 
 export default defineEventHandler(async (e) => {
-  const session = await getSession(e);
-
-  if (!("userId" in session.data)) {
-    return sendRedirect(e, "/login");
-  }
+  const session = e.context.session;
+  if (!session) return sendRedirect(e, "/login");
 
   const userId = Number(session.data.userId);
   const body = await readValidatedBody(

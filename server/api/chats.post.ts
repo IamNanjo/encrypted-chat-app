@@ -5,11 +5,8 @@ import { getSession } from "~/server/session";
 import type { RawChat } from "~/server/api/chats.get";
 
 export default defineEventHandler(async (e) => {
-  const session = await getSession(e);
-
-  if (!("userId" in session.data)) {
-    return sendRedirect(e, "/login");
-  }
+  const session = e.context.session;
+  if (!session) return sendRedirect(e, "/login");
 
   const body = await readValidatedBody(e, z.object({ user: z.number() }).parse);
 
