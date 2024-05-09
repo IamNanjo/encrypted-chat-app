@@ -19,7 +19,7 @@ export default function startWebsocketConnection() {
   ) {
     socket.value = new WebSocket(wsURL);
     socket.value.addEventListener("close", () => {
-      if (authenticated && token) startWebsocketConnection();
+      if (authenticated && token) setTimeout(startWebsocketConnection, 500);
       else return navigateTo(authPage);
     });
   } else {
