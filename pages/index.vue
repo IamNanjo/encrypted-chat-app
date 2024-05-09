@@ -15,3 +15,9 @@ const keyPair = useKeyPair();
     </template>
   </main>
 </template>
+
+<style scoped lang="scss">
+main {
+  height: calc(100% - 3em);
+}
+</style>
