@@ -2,7 +2,7 @@
 const auth = useAuth();
 const keyPair = useKeyPair();
 
-const { refresh: refreshDevice } = await useLazyAsyncData(
+const { refresh: refreshDevice } = useLazyAsyncData(
   "updateDevice",
   updateDevice,
   {
@@ -37,6 +37,7 @@ onMounted(() => {
 </script>
 
 <template>
+  <NuxtLoadingIndicator color="#FF6961" :height="2" />
   <NavBar />
   <NuxtPage />
 </template>
