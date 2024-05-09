@@ -162,9 +162,7 @@ onMounted(() => {
         >
           <span>{{
             chat.members
-              .filter(
-                (user) => user.username !== (auth as AuthenticatedUser).username
-              )
+              .filter((user) => user.id !== (auth as AuthenticatedUser).userId)
               .map((user) => user.username)
               .join(", ")
           }}</span>
@@ -185,7 +183,6 @@ onMounted(() => {
   align-self: stretch;
   display: flex;
   flex-direction: column;
-  flex-basis: 0;
   min-width: 0;
   font-size: 1.125em;
   overflow: hidden auto;
