@@ -267,14 +267,14 @@ onMounted(() => {
 <style scoped lang="scss">
 main {
   padding-block: 2em;
-}
-main > div {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: stretch;
-  gap: 2em;
-  padding: 0.5em;
+
+  > div {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: stretch;
+    gap: 2em;
+  }
 }
 
 .profile-form,
