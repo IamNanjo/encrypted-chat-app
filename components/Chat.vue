@@ -4,6 +4,8 @@ const selectedChat = useChat();
 const keyPair = useKeyPair();
 const socket = useSocket();
 
+const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+
 const newMessage = ref("");
 const messages = ref<Message[]>([]);
 
@@ -70,6 +72,16 @@ function scrollToBottom(id: string) {
       behavior: "smooth",
     });
   }, 0);
+}
+
+function enterPressed(e: KeyboardEvent) {
+  if (e.shiftKey || isMobile) {
+    scrollToBottom("chat__textfield");
+    scrollToBottom("chat__messages");
+  } else {
+    e.preventDefault();
+    sendMessage();
+  }
 }
 
 async function sendMessage() {
@@ -277,17 +289,7 @@ onMounted(() => {
             : maxNewMessageLines
         "
         v-model="newMessage"
-        @keydown.enter="
-          (e) => {
-            if (e.shiftKey) {
-              e.preventDefault();
-              sendMessage();
-            } else {
-              scrollToBottom('chat__textfield');
-              scrollToBottom('chat__messages');
-            }
-          }
-        "
+        @keydown.enter="enterPressed"
       ></textarea>
       <button
         :disabled="!selectedChat || !selectedChat.id"
