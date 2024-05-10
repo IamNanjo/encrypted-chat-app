@@ -7,13 +7,8 @@ declare module "h3" {
   }
 }
 
-defineRequestMiddleware;
-
 export default defineEventHandler(async (e) => {
-  const authPage = "/login";
-  console.log(e.path);
-  if (e.path === authPage) return;
-
+  if (e.path === "/login") return;
   const session = await getSession(e);
   e.context.session = Object.keys(session.data).length ? session : null;
 });
