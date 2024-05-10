@@ -1,4 +1,14 @@
-import db, { Chat, ChatToUser, User, Device, eq, desc } from "~/server/db";
+import db, {
+  Chat,
+  ChatToUser,
+  User,
+  Device,
+  exists,
+  and,
+  eq,
+  desc,
+  sql,
+} from "~/server/db";
 import { alias } from "drizzle-orm/sqlite-core";
 import { getSession } from "~/server/session";
 
@@ -50,7 +60,19 @@ export default defineEventHandler(async (e) => {
     .innerJoin(User, eq(ctu1.userId, User.id))
     .innerJoin(Device, eq(User.id, Device.userId))
     .innerJoin(ctu2, eq(Chat.id, ctu2.chatId))
-    .where(eq(ctu2.userId, User.id))
+    .where(
+      exists(
+        db
+          .select()
+          .from(ChatToUser)
+          .where(
+            and(
+              eq(ChatToUser.userId, e.context.session.data.userId),
+              eq(Chat.id, ChatToUser.chatId)
+            )
+          )
+      )
+    )
     .orderBy(desc(Chat.created))
     .all();
 
