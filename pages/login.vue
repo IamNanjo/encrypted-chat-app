@@ -20,6 +20,7 @@ async function handleSubmit() {
   })
     .then(handleAuthentication)
     .catch((err: FetchError) => {
+      console.error(err);
       error.value = err.statusMessage || "Incorrect credentials";
     });
 }
