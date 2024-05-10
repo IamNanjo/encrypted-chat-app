@@ -4,11 +4,13 @@ const auth = useAuth();
 const selectedChat = useChat();
 
 const chatName = computed(() => {
-  if (!auth.value.authenticated) return "";
-  return selectedChat.value?.members
-    .filter((m) => m.id !== (auth.value as AuthenticatedUser).userId)
-    .map((m) => m.username)
-    .join(", ");
+  if (!auth.value.authenticated || !selectedChat.value) return "";
+  return (
+    selectedChat.value.members
+      .filter((m) => m.id !== (auth.value as AuthenticatedUser).userId)
+      .map((m) => m.username)
+      .join(", ") || "Empty chat"
+  );
 });
 </script>
 
