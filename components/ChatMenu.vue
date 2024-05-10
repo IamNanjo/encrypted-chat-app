@@ -155,7 +155,7 @@ onMounted(() => {
       <div v-if="!chats || !chats.length">No chats found</div>
       <TransitionGroup v-else name="chat-list-transition">
         <button
-          v-for="(chat) in chats"
+          v-for="chat in chats"
           :key="chat.id"
           :class="selectedChat?.id === chat.id ? 'active' : ''"
           @click="() => selectChat(chat)"
@@ -275,7 +275,7 @@ onMounted(() => {
     }
 
     &::backdrop {
-      background-color: #000000aa;
+      background-color: #000000cc;
     }
   }
 
@@ -301,7 +301,11 @@ onMounted(() => {
     overflow-y: auto;
     overflow-x: hidden;
 
+    --separator-width: calc(100% - 0.5em);
+    --separator-height: 1px;
+
     > * {
+      position: relative;
       display: block;
       width: 100%;
       text-align: left;
@@ -309,6 +313,18 @@ onMounted(() => {
       padding: 0.5em;
       border: 1px solid var(--text-muted);
       user-select: none;
+
+      &:not(:last-child)::after {
+        content: "";
+        position: absolute;
+        bottom: calc(-1 * var(--separator-height));
+        left: 50%;
+        background-color: currentColor;
+        width: var(--separator-width);
+        height: var(--separator-height);
+        border-radius: var(--separator-height);
+        translate: -50% -50%;
+      }
 
       &:first-child {
         border-top-left-radius: var(--border-radius);
