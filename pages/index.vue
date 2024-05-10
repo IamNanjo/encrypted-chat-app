@@ -1,6 +1,11 @@
 <script setup lang="ts">
 const auth = useAuth();
 const keyPair = useKeyPair();
+const selectedChat = useChat();
+
+onBeforeUnmount(() => {
+  selectedChat.value = null;
+});
 </script>
 
 <template>
@@ -15,10 +20,3 @@ const keyPair = useKeyPair();
     </template>
   </main>
 </template>
-
-<style scoped lang="scss">
-main {
-  min-height: unset;
-  height: calc(100% - 3em);
-}
-</style>
