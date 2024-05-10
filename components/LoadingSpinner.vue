@@ -20,6 +20,7 @@ defineProps<{ text?: string }>();
   flex-direction: column;
   align-items: center;
   gap: 1rem;
+  margin: auto;
 
   &__text {
     font-size: 1.25rem;
