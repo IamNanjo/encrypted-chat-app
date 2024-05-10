@@ -155,7 +155,7 @@ onMounted(() => {
       <div v-if="!chats || !chats.length">No chats found</div>
       <TransitionGroup v-else name="chat-list-transition">
         <button
-          v-for="(chat, index) in chats"
+          v-for="(chat) in chats"
           :key="chat.id"
           :class="selectedChat?.id === chat.id ? 'active' : ''"
           @click="() => selectChat(chat)"
@@ -164,7 +164,7 @@ onMounted(() => {
             chat.members
               .filter((user) => user.id !== (auth as AuthenticatedUser).userId)
               .map((user) => user.username)
-              .join(", ")
+              .join(", ") || "Empty chat"
           }}</span>
           <Icon
             name="material-symbols:delete-rounded"
@@ -194,7 +194,7 @@ onMounted(() => {
 
     & + .chat {
       flex-basis: 0;
-      padding: 0;
+      padding-inline: 0;
     }
   }
 
