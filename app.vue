@@ -106,6 +106,7 @@ body {
   font-family: var(--ff-primary);
   scrollbar-width: thin;
   z-index: 0;
+  overflow: hidden;
 }
 
 pre,
@@ -116,9 +117,10 @@ code {
 main {
   display: flex;
   justify-content: center;
-  align-items: center;
-  min-height: calc(100% - 3em);
+  align-items: flex-start;
+  height: calc(100% - 3rem);
   overflow-x: hidden;
+  overflow-y: auto;
 }
 
 a {

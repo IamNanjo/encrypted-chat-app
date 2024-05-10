@@ -73,7 +73,7 @@ nav {
   gap: 1rem;
   background-color: var(--bg-primary);
   width: 100%;
-  height: 3em;
+  height: 3rem;
   padding-inline: 1em;
   border-bottom: 1px solid var(--bg-raise);
   user-select: none;
