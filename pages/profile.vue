@@ -266,14 +266,15 @@ onMounted(() => {
 
 <style scoped lang="scss">
 main {
-  padding-block: 2em;
+  padding-block: 1rem;
 
   > div {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
     align-items: stretch;
-    gap: 2em;
+    gap: 1rem;
+    margin: auto;
   }
 }
 

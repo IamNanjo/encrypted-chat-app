@@ -320,7 +320,7 @@ onMounted(() => {
     padding-block: 1rem;
     overflow-x: hidden;
     text-overflow: ellipsis;
-    overflow-y: auto;
+    overflow-y: scroll;
 
     &-transition-enter-active,
     &-transition-leave-active {
