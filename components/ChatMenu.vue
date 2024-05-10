@@ -187,7 +187,7 @@ onMounted(() => {
   font-size: 1.125em;
   overflow: hidden auto;
   text-wrap: nowrap;
-  transition: flex 0.2s ease;
+  transition: flex 0.3s ease;
 
   &.open {
     flex-basis: 100%;

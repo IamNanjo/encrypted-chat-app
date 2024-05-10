@@ -306,6 +306,7 @@ onMounted(() => {
   justify-content: space-between;
   padding-inline: 1em;
   padding-bottom: 1em;
+  transition: flex 0.3s ease, padding 0.3s ease;
 
   --border-radius: 6px;
 
