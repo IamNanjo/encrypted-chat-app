@@ -275,11 +275,15 @@ onMounted(() => {
             : maxNewMessageLines
         "
         v-model="newMessage"
-        @keydown.enter.exact.prevent="sendMessage"
-        @keydown.shift.enter.exact="
-          () => {
-            scrollToBottom('chat__textfield');
-            scrollToBottom('chat__messages');
+        @keydown.enter="
+          (e) => {
+            if (e.shiftKey) {
+              e.preventDefault();
+              sendMessage();
+            } else {
+              scrollToBottom('chat__textfield');
+              scrollToBottom('chat__messages');
+            }
           }
         "
       ></textarea>
