@@ -16,7 +16,7 @@ const keyPair = useKeyPair();
   </main>
 </template>
 
-<style lang="scss">
+<style scoped lang="scss">
 main {
   min-height: unset;
   height: calc(100% - 3em);
