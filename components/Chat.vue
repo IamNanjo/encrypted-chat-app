@@ -256,7 +256,9 @@ onMounted(() => {
             />
           </div>
           <div class="chat__message-content">
-            {{ message.content }}
+            <div v-for="line in message.content.split('\n')">
+              {{ line }}
+            </div>
           </div>
         </div>
       </TransitionGroup>
@@ -340,9 +342,9 @@ onMounted(() => {
   &__message {
     display: flex;
     flex-direction: column;
-    gap: 0.5em;
+    gap: 1em;
     background-color: var(--bg-raise);
-    padding: 1em;
+    padding: 1em 1.25em;
     border: 1px solid var(--text-muted);
     border-radius: var(--border-radius);
 
