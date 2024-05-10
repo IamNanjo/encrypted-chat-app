@@ -1,20 +1,21 @@
 export default defineNuxtRouteMiddleware(async (to, from) => {
-  if (process.server) return;
-
   const authPage = "/login";
-
   const fromAuthPage = from.path === authPage;
   const toAuthPage = to.path === authPage;
 
-  if (fromAuthPage && toAuthPage) return abortNavigation();
+  if (fromAuthPage && toAuthPage) return;
   if (!fromAuthPage && toAuthPage) return;
-
-  const session = await $fetch("/auth");
-  const token = sessionStorage.getItem("jwt");
 
   const auth = useAuth();
 
-  if ((!session || !token) && !toAuthPage) return navigateTo(authPage);
+  const session = await $fetch("/auth");
+
+  if (!session || process.server)
+    return toAuthPage ? undefined : navigateTo(authPage);
+
+  const token = sessionStorage.getItem("jwt");
+
+  if (!token && !toAuthPage) return navigateTo(authPage);
   if (!session) return;
 
   if (!token) return navigateTo(authPage);
