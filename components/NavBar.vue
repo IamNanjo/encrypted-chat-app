@@ -71,6 +71,7 @@ nav {
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
+  background-color: var(--bg-primary);
   width: 100%;
   height: 3em;
   padding-inline: 1em;
