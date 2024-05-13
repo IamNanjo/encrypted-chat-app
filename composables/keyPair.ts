@@ -103,6 +103,6 @@ function getKeyPairFromIDB(userId: number) {
   };
 
   dbPromise.onerror = (e) => {
-    getKeyPairFromLocalStorage(auth);
+    getKeyPairFromLocalStorage(userId);
   };
 }
