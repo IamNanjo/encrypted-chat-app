@@ -10,13 +10,13 @@ This makes the chat app far more performant efficient.
 
 ## Screenshots
 
-![Login page](screenshots/login.png)
+![Login page](public/screenshots/login.png)
 
-![User profile](screenshots/user-profile.png)
+![User profile](public/screenshots/user-profile.png)
 
-![User search](screenshots/user-search.png)
+![User search](public/screenshots/user-search.png)
 
-![Chat with messages](screenshots/chat-with-messages.png)
+![Chat with messages](public/screenshots/chat-with-messages.png)
 
 ## Setup
 
@@ -37,16 +37,16 @@ bun install
 
 ```bash
 # npm
-npm run dbinit
-npm run dbgenerate
+npm run dbmigrate
+npm run dbpush
 
 # yarn
-yarn dbinit
-yarn dbgenerate
+yarn dbmigrate
+yarn dbpush
 
 # bun
-bun dbinit
-bun dbgenerate
+bun dbmigrate
+bun dbpush
 ```
 
 ### Development Server
