@@ -350,7 +350,7 @@ onMounted(() => {
     &-transition-enter-from,
     &-transition-leave-to {
       opacity: 0;
-      transform: translateX(10rem);
+      transform: translateX(100%);
     }
   }
 

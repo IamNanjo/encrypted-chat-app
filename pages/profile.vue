@@ -334,12 +334,16 @@ main {
   &-transition-enter-from,
   &-transition-leave-to {
     opacity: 0;
-    transform: translateX(5rem);
+    transform: translateX(100%);
   }
 
   &__table-container {
     width: 100%;
     overflow-x: auto;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
   }
   &__table {
     width: 100%;
