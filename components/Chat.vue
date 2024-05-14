@@ -4,13 +4,33 @@ const selectedChat = useChat();
 const keyPair = useKeyPair();
 const socket = useSocket();
 
+const encoder = new TextEncoder();
+const decoder = new TextDecoder();
+const newMessageMaxLines = 6;
+const newMessageMaxLength = 382;
+
 const isMobile = /Mobi|Android/i.test(navigator.userAgent);
 
 const newMessage = ref("");
 const messages = ref<Message[]>([]);
 
-const maxNewMessageLines = ref(6);
+const removeChars = (string: string, chars: string[]) =>
+  chars.reduce((prev, cur) => prev.replaceAll(cur, ""), string);
+
 const newMessageLines = computed(() => newMessage.value.split("\n").length);
+
+const newMessageBuffer = computed(() => {
+  const trimmedMessage = removeChars(newMessage.value.trim(), [
+    "\u200B",
+    "\u200C",
+    "\u200D",
+    "\uFEFF",
+  ]);
+
+  if (!trimmedMessage) return new ArrayBuffer(0);
+
+  return encoder.encode(trimmedMessage).buffer as ArrayBuffer;
+});
 
 const sortedMessages = computed(() =>
   messages.value.sort(
@@ -35,8 +55,6 @@ const { execute: getMessages } = useLazyAsyncData(
         deviceId: auth.value.currentDevice,
       },
     });
-
-    const decoder = new TextDecoder();
 
     for (let i = 0, len = data.length; i < len; i++) {
       const encryptedContent = data[i].content;
@@ -85,20 +103,13 @@ function enterPressed(e: KeyboardEvent) {
 }
 
 async function sendMessage() {
-  const removeChars = (string: string, chars: string[]) =>
-    chars.reduce((prev, cur) => prev.replaceAll(cur, ""), string);
+  if (
+    !selectedChat.value ||
+    !newMessageBuffer.value.byteLength ||
+    newMessageBuffer.value.byteLength > 382
+  )
+    return;
 
-  // Remove whitespace (including zero width spaces)
-  const trimmedMessage = removeChars(newMessage.value.trim(), [
-    "\u200B",
-    "\u200C",
-    "\u200D",
-    "\uFEFF",
-  ]);
-
-  if (!selectedChat.value || !trimmedMessage) return;
-
-  const encoder = new TextEncoder();
   const messageId = crypto.randomUUID();
 
   // Encrypt message using each device of each chat member and send it
@@ -110,7 +121,7 @@ async function sendMessage() {
 
       const encryptedMessage = await encryptMessage(
         device.key,
-        encoder.encode(trimmedMessage).buffer as ArrayBuffer
+        newMessageBuffer.value
       );
 
       await $fetch("/api/messages", {
@@ -284,13 +295,16 @@ onMounted(() => {
         placeholder="Enter message here..."
         cols="30"
         :rows="
-          newMessageLines < maxNewMessageLines
+          newMessageLines < newMessageMaxLines
             ? newMessageLines
-            : maxNewMessageLines
+            : newMessageMaxLines
         "
         v-model="newMessage"
         @keydown.enter="enterPressed"
-      ></textarea>
+      />
+      <span class="chat__new-message-character-count"
+        >{{ newMessageBuffer.byteLength }} / {{ newMessageMaxLength }}</span
+      >
       <button
         :disabled="!selectedChat || !selectedChat.id"
         class="chat__send-message"
@@ -308,7 +322,6 @@ onMounted(() => {
   flex: 1 1 100%;
   align-self: stretch;
   display: flex;
-  min-width: 0;
   max-height: 100%;
   flex-direction: column;
   justify-content: space-between;
@@ -322,7 +335,6 @@ onMounted(() => {
     display: flex;
     flex-direction: column;
     gap: 1em;
-    width: 100%;
     height: 100%;
     padding-right: 0.5em;
     padding-block: 1rem;
@@ -356,7 +368,6 @@ onMounted(() => {
       align-items: center;
       gap: 1em;
       color: var(--text-muted);
-      width: 100%;
       overflow: hidden;
       user-select: none;
     }
@@ -370,20 +381,50 @@ onMounted(() => {
 
   &__new-message {
     display: flex;
-    width: 100%;
     font-size: 1.25em;
+
+    &-character-count {
+      bottom: 1px;
+      right: 3.25rem;
+      display: flex;
+      align-items: center;
+      background-color: var(--bg-raise);
+      color: var(--text-muted);
+      padding-inline: 0.5em;
+      border: 1px solid var(--text-muted);
+      border-left: 0;
+      font-size: 0.875rem;
+      text-align: right;
+      text-shadow: 1px 1px 2px black;
+      user-select: none;
+    }
   }
 
   &__textfield {
+    position: relative;
     background-color: var(--bg-raise);
     flex: 1;
     height: 100%;
     padding: 0.5em;
-    border: 1px solid #7f7f7f;
+    border: 1px solid var(--text-muted);
+    border-right: 0;
     border-top-left-radius: var(--border-radius);
     border-bottom-left-radius: var(--border-radius);
     resize: none;
+    line-height: 1.25;
     overflow-y: auto;
+
+    --scrollbar-size: 4px;
+
+    &:focus {
+      border: 1px solid currentColor;
+      border-right: 0;
+      outline: 0;
+
+      + * {
+        border-block: 1px solid var(--text-primary);
+      }
+    }
   }
 
   &__send-message {
