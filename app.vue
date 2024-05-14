@@ -38,6 +38,7 @@ onMounted(() => {
 
 <template>
   <NuxtLoadingIndicator color="#FF6961" :height="2" />
+  <NuxtPwaManifest />
   <NavBar />
   <NuxtPage />
 </template>
