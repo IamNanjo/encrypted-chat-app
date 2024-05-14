@@ -54,14 +54,14 @@ onMounted(() => {
   filter: blur(1rem);
 }
 
-::-webkit-scrollbar::-webkit-scrollbar {
-  width: var(--scrollbar-size) !important;
-  height: var(--scrollbar-size) !important;
+::-webkit-scrollbar {
+  width: var(--scrollbar-size);
+  height: var(--scrollbar-size);
 }
-::-webkit-scrollbar-track::-webkit-scrollbar-track {
+::-webkit-scrollbar-track {
   background-color: transparent;
 }
-::-webkit-scrollbar-thumb::-webkit-scrollbar-thumb {
+::-webkit-scrollbar-thumb {
   background-color: hsl(0, 0%, 69%);
   border-radius: var(--scrollbar-size);
 }
@@ -86,6 +86,7 @@ onMounted(() => {
   --fg-primary: white;
   --text-primary: white;
   --text-alt: black;
+  --text-muted: #7f7f7f;
   --ff-primary: system-ui, sans-serif;
   --scrollbar-size: 6px;
 }
