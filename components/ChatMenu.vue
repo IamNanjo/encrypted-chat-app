@@ -307,9 +307,6 @@ onMounted(() => {
     overflow-y: auto;
     overflow-x: hidden;
 
-    --separator-width: calc(100% - 0.5em);
-    --separator-height: 1px;
-
     > * {
       position: relative;
       display: block;
@@ -319,18 +316,6 @@ onMounted(() => {
       padding: 0.5em;
       border: 1px solid var(--text-muted);
       user-select: none;
-
-      &:not(:last-child)::after {
-        content: "";
-        position: absolute;
-        bottom: calc(-1 * var(--separator-height));
-        left: 50%;
-        background-color: currentColor;
-        width: var(--separator-width);
-        height: var(--separator-height);
-        border-radius: var(--separator-height);
-        translate: -50% -50%;
-      }
 
       &:first-child {
         border-top-left-radius: var(--border-radius);
