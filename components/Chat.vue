@@ -328,6 +328,7 @@ onMounted(() => {
   padding-inline: 1em;
   padding-bottom: 1em;
   transition: flex 0.3s ease, padding 0.3s ease;
+  overflow: hidden;
 
   --border-radius: 6px;
 
@@ -338,8 +339,8 @@ onMounted(() => {
     height: 100%;
     padding-right: 0.5em;
     padding-block: 1rem;
-    overflow-x: hidden;
     text-overflow: ellipsis;
+    overflow-x: hidden;
     overflow-y: scroll;
 
     &-transition-enter-active,
@@ -373,6 +374,7 @@ onMounted(() => {
     }
 
     &-content {
+      line-break: loose;
       overflow-wrap: break-word;
       word-wrap: break-word;
       word-break: break-all;
@@ -381,7 +383,7 @@ onMounted(() => {
 
   &__new-message {
     display: flex;
-    font-size: 1.25em;
+    font-size: 1.125rem;
 
     &-character-count {
       bottom: 1px;
