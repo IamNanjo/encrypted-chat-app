@@ -90,34 +90,40 @@ async function deleteChat(e: Event, id: number) {
   await $fetch("/api/chats", { method: "delete", body: { id } });
 }
 
+async function onMessage(e: MessageEvent) {
+  const message: SocketMessage<RawChat> = JSON.parse(e.data);
+
+  if (message.event !== "chat") return;
+
+  switch (message.mode) {
+    case "post":
+      const newChat = await parseChat(message.data);
+
+      // Add chat if not already in the chat list
+      if (!chats.value.map((c) => c.id).includes(newChat.id))
+        chats.value = [newChat, ...chats.value];
+
+      break;
+
+    case "delete":
+      chats.value = chats.value.filter((chat) => {
+        const keepChat = chat.id !== message.data.id;
+
+        if (!keepChat && selectedChat.value?.id === chat.id)
+          selectedChat.value = null;
+
+        return keepChat;
+      });
+      break;
+  }
+}
+
 onMounted(() => {
-  const onMessage = async (e: MessageEvent) => {
-    const message: SocketMessage<RawChat> = JSON.parse(e.data);
-
-    if (message.event !== "chat") return;
-
-    switch (message.mode) {
-      case "post":
-        const newChat = await parseChat(message.data);
-
-        // Add chat if not already in the chat list
-        if (!chats.value.map((c) => c.id).includes(newChat.id))
-          chats.value = [newChat, ...chats.value];
-
-        break;
-
-      case "delete":
-        chats.value = chats.value.filter((chat) => {
-          const keepChat = chat.id !== message.data.id;
-
-          if (!keepChat && selectedChat.value?.id === chat.id)
-            selectedChat.value = null;
-
-          return keepChat;
-        });
-        break;
-    }
-  };
+  // Close chat menu if resized to desktop breakpoint
+  window.addEventListener("resize", async () => {
+    if (isOpen && window.matchMedia("(min-width: 50rem)").matches)
+      isOpen.value = false;
+  });
 
   if (socket.value) socket.value.addEventListener("message", onMessage);
 });
