@@ -31,11 +31,11 @@ const chatName = computed(() => {
     </div>
     <div>{{ chatName }}</div>
     <DropdownMenu>
-      <div class="profile-menu__toggle" tabindex="0" title="Account">
+      <div class="dropdown__toggle" tabindex="0" title="Account">
         <Icon name="material-symbols:account-circle" size="2em" />
       </div>
       <ClientOnly>
-        <div class="profile-menu__options">
+        <div class="dropdown__options">
           <div v-if="auth.authenticated" class="no-select">
             Logged in as {{ auth.username }}
           </div>
@@ -79,6 +79,7 @@ nav {
   padding-inline: 1em;
   border-bottom: 1px solid var(--bg-raise);
   user-select: none;
+  z-index: 10;
 
   > div:nth-child(2) {
     text-wrap: nowrap;
