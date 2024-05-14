@@ -1,13 +1,13 @@
 <script setup lang="ts"></script>
 
 <template>
-	<div class="profile-menu">
+	<div class="dropdown">
 		<slot />
 	</div>
 </template>
 
 <style lang="scss">
-.profile-menu {
+.dropdown {
 	position: relative;
 	z-index: 10;
 
