@@ -88,7 +88,7 @@ onMounted(() => {
   --text-alt: black;
   --text-muted: #7f7f7f;
   --ff-primary: system-ui, sans-serif;
-  --scrollbar-size: 6px;
+  --scrollbar-size: 4px;
 }
 
 #__nuxt {
