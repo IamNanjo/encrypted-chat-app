@@ -18,6 +18,12 @@ This makes the chat app far more performant efficient.
 
 ![Chat with messages](public/screenshots/chat-with-messages.png)
 
+## Database
+
+This app uses Drizzle ORM with better-sqlite3 adapter for the database connection.
+
+![Database EER diagram](db-diagram.svg)
+
 ## Setup
 
 Make sure to install the dependencies:
