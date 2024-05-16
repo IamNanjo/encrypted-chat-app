@@ -43,9 +43,9 @@ export default defineEventHandler(async (e) => {
     })
     .get();
 
-  // Delete devices that have not been used in 7 days
-  const oneWeekAgo = new Date(Date.now() - 604800000);
-  db.delete(Device).where(lte(Device.lastUsed, oneWeekAgo)).run();
+  // Delete devices that have not been used in 60 days
+  const sixtyDaysAgo = new Date(Date.now() - 5184000000);
+  db.delete(Device).where(lte(Device.lastUsed, sixtyDaysAgo)).run();
 
   if (!global.clients) global.clients = {};
   if (userId in global.clients) {
