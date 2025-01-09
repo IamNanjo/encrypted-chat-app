@@ -4,6 +4,7 @@ const categories = ["Chat", "Encrypted", "E2EE"];
 
 export default defineNuxtConfig({
   devtools: { enabled: false },
+
   app: {
     pageTransition: { name: "page", mode: "out-in" },
     head: {
@@ -18,8 +19,10 @@ export default defineNuxtConfig({
       ],
     },
   },
+
   modules: ["nuxt-icon", "@nuxtjs/plausible", "@vite-pwa/nuxt"],
   plausible: { apiHost: "https://plausible.nanjo.tech" },
+
   pwa: {
     registerType: "autoUpdate",
     strategies: "generateSW",
@@ -549,4 +552,6 @@ export default defineNuxtConfig({
       ],
     },
   },
+
+  compatibilityDate: "2025-01-09",
 });
