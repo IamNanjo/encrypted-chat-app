@@ -149,7 +149,7 @@ onMounted(() => {
 <template>
     <main>
         <div>
-            <div v-if="status !== 'pending'">Loading profile...</div>
+            <div v-if="status == 'pending'">Loading profile...</div>
             <div v-else-if="apiError || !profile">Failed to fetch profile</div>
             <form v-else class="profile-form" @submit.prevent="handleSubmit">
                 <h1>Your Profile</h1>
