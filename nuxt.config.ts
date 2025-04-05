@@ -3,7 +3,7 @@ const description = "End-to-end encrypted realtime chat app";
 const categories = ["Chat", "Encrypted", "E2EE"];
 
 export default defineNuxtConfig({
-    devtools: { enabled: false },
+    devtools: { enabled: true },
 
     app: {
         pageTransition: { name: "page", mode: "out-in" },
@@ -555,6 +555,5 @@ export default defineNuxtConfig({
         },
     },
 
-    compatibilityDate: "2025-01-09",
+    compatibilityDate: "2025-04-05",
 });
-
