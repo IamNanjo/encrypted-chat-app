@@ -1,46 +1,54 @@
 {
-  "name": "chat-app",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "build": "nuxt build",
-    "upgrade": "nuxt upgrade -f",
-    "dev": "nuxt dev",
-    "preview": "nuxt preview --dotenv .env",
-    "dbmigrate": "drizzle-kit generate:sqlite --out ./db/out/migrations --schema ./db/schema.ts",
-    "dbpush": "drizzle-kit push:sqlite",
-    "dbdrop": "drizzle-kit drop",
-    "dbstudio": "drizzle-kit studio",
-    "dbinspect": "drizzle-kit introspect:sqlite",
-    "start": "pm2 delete ecosystem.config.cjs && pm2 start ecosystem.config.cjs"
-  },
-  "devDependencies": {
-    "@nuxt/devtools": "latest",
-    "@nuxtjs/google-fonts": "^3.0.2",
-    "@types/bcrypt": "^5.0.1",
-    "@types/better-sqlite3": "^7.6.10",
-    "@types/bun": "^1.1.1",
-    "@types/jsonwebtoken": "^9.0.6",
-    "@types/ua-parser-js": "^0.7.39",
-    "@types/ws": "^8.5.10",
-    "@vite-pwa/nuxt": "^0.7.0",
-    "drizzle-kit": "^0.20.17",
-    "nuxt": "^3.11.2",
-    "vue": "^3.3.7",
-    "vue-router": "^4.2.5"
-  },
-  "dependencies": {
-    "@nuxtjs/color-mode": "^3.3.0",
-    "@nuxtjs/plausible": "^1.0.0",
-    "bcrypt": "^5.1.1",
-    "better-sqlite3": "^9.6.0",
-    "drizzle-orm": "^0.30.10",
-    "hookable": "^5.5.3",
-    "jsonwebtoken": "^9.0.2",
-    "nuxt-icon": "^0.6.1",
-    "sass": "^1.69.5",
-    "ua-parser-js": "^1.0.37",
-    "ws": "^8.15.1",
-    "zod": "^3.23.5"
-  }
+    "name": "chat-app",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "build": "nuxt build",
+        "dev": "nuxt dev",
+        "dbmigrate": "drizzle-kit generate:sqlite --out ./db/out/migrations --schema ./db/schema.ts",
+        "dbpush": "drizzle-kit push:sqlite",
+        "dbdrop": "drizzle-kit drop",
+        "dbstudio": "drizzle-kit studio",
+        "dbinspect": "drizzle-kit introspect:sqlite",
+        "start": "pm2 delete ecosystem.config.cjs && pm2 start ecosystem.config.cjs"
+    },
+    "devDependencies": {
+        "@nuxt/devtools": "latest",
+        "@nuxtjs/google-fonts": "^3.2.0",
+        "@types/bcrypt": "^5.0.2",
+        "@types/better-sqlite3": "^7.6.13",
+        "@types/bun": "^1.2.8",
+        "@types/jsonwebtoken": "^9.0.9",
+        "@types/ua-parser-js": "^0.7.39",
+        "@types/ws": "^8.18.1",
+        "@vite-pwa/nuxt": "^0.7.0",
+        "drizzle-kit": "^0.20.18",
+        "nuxt": "^3.16.2",
+        "vue": "^3.5.13",
+        "vue-router": "^4.5.0"
+    },
+    "dependencies": {
+        "@nuxtjs/color-mode": "^3.5.2",
+        "@nuxtjs/plausible": "^1.2.0",
+        "bcrypt": "^5.1.1",
+        "better-sqlite3": "^9.6.0",
+        "drizzle-orm": "^0.30.10",
+        "hookable": "^5.5.3",
+        "jsonwebtoken": "^9.0.2",
+        "nuxt-icon": "^0.6.10",
+        "sass": "^1.86.3",
+        "ua-parser-js": "^1.0.40",
+        "ws": "^8.18.1",
+        "zod": "^3.24.2"
+    },
+    "packageManager": "pnpm@10.4.0+sha512.6b849d0787d97f8f4e1f03a9b8ff8f038e79e153d6f11ae539ae7c435ff9e796df6a862c991502695c7f9e8fac8aeafc1ac5a8dab47e36148d183832d886dd52",
+    "pnpm": {
+        "onlyBuiltDependencies": [
+            "@parcel/watcher",
+            "bcrypt",
+            "better-sqlite3",
+            "es5-ext",
+            "esbuild"
+        ]
+    }
 }
