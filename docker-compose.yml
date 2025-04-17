@@ -1,0 +1,30 @@
+services:
+  app:
+    image: ghcr.io/iamnanjo/encrypted-chat-app:latest
+    restart: unless-stopped
+    build:
+      context: .
+      labels:
+        - org.opencontainers.image.source=https://github.com/IamNanjo/encrypted-chat-app
+        - org.opencontainers.image.description="End-to-end encrypted realtime chat app made using Nuxt 3, Websockets and the Web Crypto API"
+        - org.opencontainers.image.licenses=MIT
+      tags:
+        - "ghcr.io/iamnanjo/encrypted-chat-app:latest"
+    ports:
+      # Use CHAT_PORT, else default to 10443
+      - "${CHAT_PORT:-10443}:3000"
+    volumes:
+      - "${CHAT_DB_DIR}:/app/db/out"
+    environment:
+      CHAT_SECRET: ${CHAT_SECRET}
+      CHAT_DB_URL: file:/app/db/out/${CHAT_DB_NAME}
+    deploy:
+      # Websocket sessions management handled in memory
+      replicas: 1
+      restart_policy:
+        condition: any
+        delay: 2s
+        window: 30s
+      rollback_config:
+        monitor: 5s
+        order: start-first

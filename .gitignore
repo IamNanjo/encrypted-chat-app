@@ -18,4 +18,6 @@ logs
 .fleet
 .idea
 
+.env
+
 db/out
