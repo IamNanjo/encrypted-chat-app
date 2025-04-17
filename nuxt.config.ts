@@ -5,6 +5,12 @@ const categories = ["Chat", "Encrypted", "E2EE"];
 export default defineNuxtConfig({
     devtools: { enabled: true },
 
+    nitro: {
+        experimental: {
+            websocket: true,
+        },
+    },
+
     app: {
         pageTransition: { name: "page", mode: "out-in" },
         head: {
@@ -23,7 +29,13 @@ export default defineNuxtConfig({
     },
 
     modules: ["nuxt-icon", "@nuxtjs/plausible", "@vite-pwa/nuxt"],
-    plausible: { apiHost: "https://plausible.nanjo.tech" },
+    plausible: {
+        apiHost: "https://data.nanjo.dev",
+        ignoredHostnames: ["localhost", "local.test"],
+        autoOutboundTracking: true,
+        autoPageviews: true,
+        logIgnoredEvents: true,
+    },
 
     pwa: {
         registerType: "autoUpdate",
@@ -555,5 +567,5 @@ export default defineNuxtConfig({
         },
     },
 
-    compatibilityDate: "2025-04-05",
+    compatibilityDate: "2025-04-16",
 });
