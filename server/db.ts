@@ -1,11 +1,18 @@
-import { drizzle } from "drizzle-orm/better-sqlite3";
-import Database from "better-sqlite3";
+import { createClient } from "@libsql/client";
+import { drizzle } from "drizzle-orm/libsql";
+import { sql } from "drizzle-orm";
 import * as schema from "~/db/schema";
 
-const dbURL = process.env.DATABASE_URL;
-if (!dbURL) throw new Error("No database URL defined");
+import { dbUrl } from "~/server/env.mjs";
 
-const db = drizzle(new Database(dbURL), { schema });
+const client = createClient({ url: dbUrl, offline: true });
+const db = drizzle(client, { schema: schema });
+
+db.run(sql`
+PRAGMA foreign_keys = ON;
+PRAGMA journal_mode = WAL;
+PRAGMA auto_vacuum = FULL;
+`);
 
 export default db;
 export * from "drizzle-orm";

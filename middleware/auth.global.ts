@@ -1,36 +1,50 @@
 export default defineNuxtRouteMiddleware(async (to, from) => {
-  const authPage = "/login";
-  const fromAuthPage = from.path === authPage;
-  const toAuthPage = to.path === authPage;
+    if (import.meta.server) return;
 
-  if (fromAuthPage && toAuthPage) return;
-  if (!fromAuthPage && toAuthPage) return;
+    const authPage = "/login";
+    const fromAuthPage = from.path === authPage;
+    const toAuthPage = to.path === authPage;
 
-  const auth = useAuth();
+    // Fix weird UI bug by reloading the app.
+    // Always include redirect query parameter when navigating to login route
+    if (!fromAuthPage && toAuthPage)
+        return reloadNuxtApp({ path: `/login?redirect=${from.path}` });
 
-  const session = await $fetch("/auth");
+    const auth = useAuth();
 
-  if (!session || process.server)
-    return toAuthPage ? undefined : navigateTo(authPage);
+    if (auth.value.authenticated) {
+        if (toAuthPage) {
+            getKeyPair(auth.value.userId);
+            return navigateTo(
+                from.query.redirect
+                    ? (from.query.redirect as string)
+                    : from.path,
+            );
+        }
+    }
 
-  const token = sessionStorage.getItem("jwt");
+    const session = await $fetch("/auth");
 
-  if (!token && !toAuthPage) return navigateTo(authPage);
-  if (!session) return;
+    if (!session) {
+        return toAuthPage
+            ? undefined
+            : navigateTo({
+                  path: "/login",
+                  query: { redirect: from.path },
+                  replace: true,
+              });
+    }
 
-  if (!token) return navigateTo(authPage);
+    auth.value = {
+        ...session,
+        authenticated: true,
+        currentDevice: auth.value.authenticated
+            ? auth.value.currentDevice
+            : null,
+    };
 
-  auth.value = {
-    ...session, // userId and username
-    token,
-    authenticated: true,
-    currentDevice: auth.value.authenticated ? auth.value.currentDevice : null,
-  };
+    getKeyPair(auth.value.userId);
 
-  getKeyPair(auth.value.userId);
-
-  const redirect = startWebsocketConnection();
-  if (redirect) return redirect;
-
-  if (toAuthPage) return navigateTo("/");
+    const redirect = startWebsocketConnection();
+    if (redirect) return redirect;
 });

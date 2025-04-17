@@ -4,12 +4,6 @@ const socket = useSocket();
 
 const locale = ref("fi-FI");
 
-interface Device {
-    id: number;
-    name: string;
-    lastUsed: string;
-}
-
 const { data: profile, status, error: apiError } = useLazyFetch("/api/profile");
 
 const currentPassword = ref("");
@@ -20,9 +14,9 @@ const errorTimeout = ref(0);
 // Sorted devices by last used date in descending order
 // Keep current device at the top
 const devices = computed(() =>
-    !profile.value
+    !profile.value || !Array.isArray(profile.value.devices)
         ? []
-        : [...profile.value.devices].sort((a, b) => {
+        : profile.value.devices.toSorted((a, b) => {
               const lastUsed = () =>
                   new Date(b.lastUsed).getTime() -
                   new Date(a.lastUsed).getTime();
@@ -62,6 +56,9 @@ async function handleSubmit() {
 }
 
 async function deleteUser() {
+    if (!auth.value.authenticated) return;
+
+    deleteKeyPair(auth.value.userId);
     $fetch("/api/user", { method: "DELETE" }).then(logOut);
 }
 

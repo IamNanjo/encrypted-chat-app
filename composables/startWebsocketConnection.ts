@@ -1,47 +1,53 @@
+const reconnectInterval = 500;
+let reconnectAttempts = 0;
+
 export default function startWebsocketConnection() {
-  const socket = useSocket();
-  const auth = useAuth();
-  const authPage = "/login";
+    const socket = useSocket();
+    const auth = useAuth();
+    const authPage = "/login";
 
-  if (!auth.value.authenticated || !auth.value.token)
-    return navigateTo(authPage);
+    if (!auth.value.authenticated) return navigateTo(authPage);
 
-  const authenticated = auth.value.authenticated;
-  const token = auth.value.token;
+    const wsProtocol =
+        window.location.protocol === "https:" ? "wss://" : "ws://";
+    const wsURL = `${wsProtocol}${window.location.host}/ws`;
 
-  const wsProtocol = window.location.protocol === "https:" ? "wss://" : "ws://";
-  const wsURL = `${wsProtocol}${window.location.host}`;
+    if (
+        !socket.value ||
+        socket.value.readyState === socket.value.CLOSED ||
+        socket.value.readyState === socket.value.CLOSING
+    ) {
+        socket.value = new WebSocket(wsURL);
+        socket.value.addEventListener("open", () => (reconnectAttempts = 0));
+        socket.value.addEventListener("message", (e) => {
+            try {
+                if (!auth.value.authenticated) return;
 
-  if (
-    !socket.value ||
-    socket.value.readyState === socket.value.CLOSED ||
-    socket.value.readyState === socket.value.CLOSING
-  ) {
-    socket.value = new WebSocket(wsURL);
-    socket.value.addEventListener("close", () => {
-      if (authenticated && token) setTimeout(startWebsocketConnection, 500);
-      else return navigateTo(authPage);
-    });
-  } else {
-    return;
-  }
+                const message = JSON.parse(e.data) as SocketMessage<Device>;
 
-  socket.value.addEventListener("message", async (e) => {
-    const { event, mode } = JSON.parse(e.data) as SocketMessage<any>;
+                if (message.event !== "device" || message.mode !== "delete")
+                    return;
 
-    if (event !== "auth" || mode !== "delete") return;
+                if (message.data.id !== auth.value.currentDevice) return;
 
-    await logOut();
-    navigateTo(authPage);
-  });
-
-  socket.value.addEventListener("open", () => {
-    socket.value!.send(
-      JSON.stringify({
-        event: "auth",
-        mode: "post",
-        data: token,
-      } as SocketMessage<string>)
-    );
-  });
+                deleteKeyPair(auth.value.userId);
+                logOut();
+            } catch {
+                console.error("[WS] malformed message");
+            }
+        });
+        socket.value.addEventListener("close", (e) => {
+            if (auth.value.authenticated && e.code !== 4000) {
+                setTimeout(
+                    startWebsocketConnection,
+                    Math.min(
+                        reconnectInterval * ++reconnectAttempts,
+                        reconnectInterval * 10,
+                    ),
+                );
+            } else return navigateTo(authPage);
+        });
+    } else {
+        return;
+    }
 }
