@@ -1,13 +1,12 @@
 FROM fedora:latest AS base
 WORKDIR /app
 RUN dnf update -y
-RUN dnf install -y nodejs
-RUN npm i -g pnpm@latest
+RUN dnf install -y nodejs pnpm
 
 FROM base AS builder
 WORKDIR /app
 COPY . .
-RUN pnpm install
+RUN pnpm install --frozen-lockfile
 RUN pnpm run build
 
 FROM base AS deploy
