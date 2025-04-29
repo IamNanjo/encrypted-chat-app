@@ -28,14 +28,7 @@ export default defineNuxtConfig({
         },
     },
 
-    modules: ["nuxt-icon", "@nuxtjs/plausible", "@vite-pwa/nuxt"],
-    plausible: {
-        apiHost: "https://data.nanjo.dev",
-        ignoredHostnames: ["localhost", "local.test"],
-        autoOutboundTracking: true,
-        autoPageviews: true,
-        logIgnoredEvents: true,
-    },
+    modules: ["nuxt-icon", "@vite-pwa/nuxt"],
 
     pwa: {
         registerType: "autoUpdate",
